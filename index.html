@@ -141,10 +141,33 @@ nav{background:#ffffff;border-bottom:1.5px solid var(--border);position:sticky;t
   .nav-links{display:none;}
   .nav-cart{display:none;}
   .hamburger{display:flex;}
-  .page{padding:1.2rem;}
+  .page{padding:1rem;}
   .checkout-layout{grid-template-columns:1fr;}
-  .hero{padding:2.5rem 1.5rem;}
-  .hero h1{font-size:1.7rem;}
+  .hero{padding:2rem 1.2rem;}
+  .hero h1{font-size:1.6rem;}
+  .hero p{font-size:.88rem;}
+  .hero-btns{flex-direction:column;align-items:center;}
+  .product-grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:.8rem;}
+  .section-title{font-size:1.1rem;}
+  /* 結帳頁 */
+  .order-summary{margin-top:1rem;}
+  .checkout-btn{font-size:.9rem;padding:.7rem;}
+  /* 填寫資料頁 */
+  #orderform .btn-primary{font-size:.9rem;}
+  /* 訂單詳情頁 */
+  #orderdetail>div>div{padding:1rem;}
+  /* Modal */
+  .modal-panel{width:100%;}
+  .modal-specs{grid-template-columns:1fr;}
+  /* 關於我們 */
+  .about-card{padding:1.5rem 1rem;}
+  /* 聯絡 */
+  .contact-form{padding:1.2rem;}
+  .contact-links{gap:.5rem;}
+  .contact-link{font-size:.78rem;padding:.35rem .7rem;}
+  /* 購物車 */
+  .cart-thumb{width:44px;height:44px;}
+  .cart-item-name{font-size:.82rem;}
 }
 </style>
 </head>
@@ -259,11 +282,95 @@ nav{background:#ffffff;border-bottom:1.5px solid var(--border);position:sticky;t
         <div class="summary-row"><span>運費</span><span id="cart-shipping">NT$60</span></div>
         <div class="summary-row"><span>優惠折抵</span><span>-NT$0</span></div>
         <div class="summary-total"><span>總計</span><span id="cart-total">NT$0</span></div>
-        <div class="form-group" style="margin-top:1rem;"><label style="font-size:.83rem;color:var(--text2);display:block;margin-bottom:.4rem;">優惠碼</label><div style="display:flex;gap:.5rem;"><input type="text" placeholder="輸入優惠碼" style="border:1.5px solid var(--border);border-radius:8px;padding:.5rem .8rem;font-size:.83rem;flex:1;font-family:inherit;background:var(--cream);outline:none;"><button class="btn-outline" style="padding:.5rem 1rem;font-size:.8rem;">套用</button></div></div>
-        <button class="checkout-btn">前往結帳 →</button>
-        <p style="font-size:.75rem;color:var(--text2);text-align:center;margin-top:.8rem;">支援：信用卡・LINE Pay・ATM轉帳</p>
+        <button class="checkout-btn" onclick="goToOrderForm()">前往結帳 →</button>
+        <p style="font-size:.75rem;color:var(--text2);text-align:center;margin-top:.8rem;">支援：信用卡・ATM轉帳・貨到付款</p>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- ORDER FORM 填寫資料 -->
+<div class="page" id="orderform">
+  <div style="margin-top:1rem;max-width:600px;margin-left:auto;margin-right:auto;">
+    <div class="section-title">填寫收件資料</div>
+    <div class="section-sub">請填寫您的資料以完成訂購 ✿</div>
+    <div style="background:#fff;border-radius:20px;border:1px solid var(--border);padding:1.8rem;">
+      <!-- 收件人 -->
+      <div style="font-size:.92rem;font-weight:500;color:var(--pink4);margin-bottom:1rem;padding-bottom:.5rem;border-bottom:1px solid var(--border);">📦 收件資訊</div>
+      <div class="form-group"><label>收件人姓名 *</label><input type="text" id="o-name" placeholder="請輸入真實姓名"></div>
+      <div class="form-group"><label>聯絡電話 *</label><input type="tel" id="o-phone" placeholder="0912-345-678"></div>
+      <div class="form-group"><label>Email *</label><input type="email" id="o-email" placeholder="用於接收訂單通知"></div>
+
+      <!-- 運送方式 -->
+      <div style="font-size:.92rem;font-weight:500;color:var(--pink4);margin:1.4rem 0 1rem;padding-bottom:.5rem;border-bottom:1px solid var(--border);">🚚 運送方式</div>
+      <div style="display:flex;flex-direction:column;gap:.6rem;margin-bottom:1rem;">
+        <label style="display:flex;align-items:center;gap:.7rem;background:var(--cream);border-radius:10px;padding:.8rem 1rem;cursor:pointer;border:1.5px solid transparent;" id="ship-label-home">
+          <input type="radio" name="shipping" value="home" onchange="handleShipping(this)" style="accent-color:var(--pink4);"> 宅配到府（+NT$60）
+        </label>
+        <label style="display:flex;align-items:center;gap:.7rem;background:var(--cream);border-radius:10px;padding:.8rem 1rem;cursor:pointer;border:1.5px solid transparent;" id="ship-label-711">
+          <input type="radio" name="shipping" value="711" onchange="handleShipping(this)" style="accent-color:var(--pink4);"> 7-11 超商取貨（+NT$60）
+        </label>
+        <label style="display:flex;align-items:center;gap:.7rem;background:var(--cream);border-radius:10px;padding:.8rem 1rem;cursor:pointer;border:1.5px solid transparent;" id="ship-label-family">
+          <input type="radio" name="shipping" value="family" onchange="handleShipping(this)" style="accent-color:var(--pink4);"> 全家超商取貨（+NT$60）
+        </label>
+      </div>
+      <div id="address-wrap" style="display:none;">
+        <div class="form-group"><label>收件地址 *</label><input type="text" id="o-address" placeholder="請輸入完整地址（縣市、鄉鎮、路街）"></div>
+      </div>
+      <div id="store-wrap" style="display:none;">
+        <div class="form-group"><label>超商門市名稱 *</label><input type="text" id="o-store" placeholder="請輸入門市名稱（如：台北忠孝門市）"></div>
+      </div>
+
+      <!-- 付款方式 -->
+      <div style="font-size:.92rem;font-weight:500;color:var(--pink4);margin:1.4rem 0 1rem;padding-bottom:.5rem;border-bottom:1px solid var(--border);">💳 付款方式</div>
+      <div style="display:flex;flex-direction:column;gap:.6rem;margin-bottom:1.2rem;">
+        <label style="display:flex;align-items:center;gap:.7rem;background:var(--cream);border-radius:10px;padding:.8rem 1rem;cursor:pointer;">
+          <input type="radio" name="payment" value="atm" checked style="accent-color:var(--pink4);"> ATM 轉帳
+        </label>
+        <label style="display:flex;align-items:center;gap:.7rem;background:var(--cream);border-radius:10px;padding:.8rem 1rem;cursor:pointer;">
+          <input type="radio" name="payment" value="cod" style="accent-color:var(--pink4);"> 貨到付款
+        </label>
+        <label style="display:flex;align-items:center;gap:.7rem;background:#f5f5f5;border-radius:10px;padding:.8rem 1rem;cursor:not-allowed;opacity:.5;">
+          <input type="radio" name="payment" value="card" disabled style="accent-color:var(--pink4);"> 信用卡（即將開放）
+        </label>
+      </div>
+
+      <div class="form-group"><label>備註（選填）</label><textarea id="o-note" placeholder="特殊需求、顏色備註等..." style="height:80px;resize:none;width:100%;border:1.5px solid var(--border);border-radius:10px;padding:.6rem .9rem;font-size:.88rem;font-family:inherit;background:var(--cream);outline:none;"></textarea></div>
+
+      <button class="btn-primary" style="width:100%;padding:.8rem;font-size:.95rem;" onclick="submitOrder()">確認訂購 →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ORDER DETAIL 訂單詳情 -->
+<div class="page" id="orderdetail">
+  <div style="margin-top:1rem;max-width:600px;margin-left:auto;margin-right:auto;">
+    <div style="background:#2e7d32;border-radius:16px;padding:1.2rem 1.5rem;color:#fff;text-align:center;margin-bottom:1.2rem;">
+      <div style="font-size:1.5rem;margin-bottom:.3rem;">✓</div>
+      <div style="font-size:1.1rem;font-weight:500;font-family:'Noto Serif TC',serif;">您的訂單已完成！</div>
+      <div style="font-size:.82rem;opacity:.85;margin-top:.3rem;" id="order-id-display"></div>
+    </div>
+    <!-- 商品清單 -->
+    <div style="background:#fff;border-radius:16px;border:1px solid var(--border);padding:1.4rem;margin-bottom:1rem;">
+      <div style="font-size:.92rem;font-weight:500;color:var(--pink4);margin-bottom:1rem;">🛍 訂購商品</div>
+      <div id="order-items-display"></div>
+      <div style="border-top:1px solid var(--border);margin-top:1rem;padding-top:1rem;">
+        <div style="display:flex;justify-content:space-between;font-size:.85rem;color:var(--text2);margin-bottom:.4rem;"><span>小計</span><span id="od-subtotal"></span></div>
+        <div style="display:flex;justify-content:space-between;font-size:.85rem;color:var(--text2);margin-bottom:.4rem;"><span>運費</span><span id="od-shipping"></span></div>
+        <div style="display:flex;justify-content:space-between;font-size:1rem;font-weight:500;color:var(--pink4);"><span>總計</span><span id="od-total"></span></div>
+      </div>
+    </div>
+    <!-- 收件資訊 -->
+    <div style="background:#fff;border-radius:16px;border:1px solid var(--border);padding:1.4rem;margin-bottom:1rem;">
+      <div style="font-size:.92rem;font-weight:500;color:var(--pink4);margin-bottom:1rem;">📦 收件資訊</div>
+      <div id="order-info-display" style="font-size:.88rem;color:var(--text2);line-height:2.2;"></div>
+    </div>
+    <!-- 付款資訊 -->
+    <div style="background:#fff;border-radius:16px;border:1px solid var(--border);padding:1.4rem;margin-bottom:1.5rem;" id="payment-info-wrap">
+      <div style="font-size:.92rem;font-weight:500;color:var(--pink4);margin-bottom:1rem;">💳 付款資訊</div>
+      <div id="order-payment-display" style="font-size:.88rem;color:var(--text2);line-height:2.2;"></div>
+    </div>
+    <button class="btn-outline" style="width:100%;padding:.75rem;" onclick="show('home')">← 繼續購物</button>
   </div>
 </div>
 <!-- 商品詳情 Modal -->
@@ -513,6 +620,66 @@ window.addToCart=addToCart;
 window.changeQty=changeQty;
 window.toggleMobileMenu=function(){
   document.getElementById('mobile-menu').classList.toggle('open');
+};
+window.goToOrderForm=function(){
+  if(!cart.length){alert('購物車是空的！');return;}
+  show('orderform');
+};
+window.handleShipping=function(radio){
+  document.getElementById('address-wrap').style.display=radio.value==='home'?'block':'none';
+  document.getElementById('store-wrap').style.display=(radio.value==='711'||radio.value==='family')?'block':'none';
+};
+window.submitOrder=function(){
+  const name=document.getElementById('o-name').value.trim();
+  const phone=document.getElementById('o-phone').value.trim();
+  const email=document.getElementById('o-email').value.trim();
+  const shipping=document.querySelector('input[name="shipping"]:checked');
+  const payment=document.querySelector('input[name="payment"]:checked');
+  if(!name||!phone||!email){alert('請填寫姓名、電話和 Email');return;}
+  if(!shipping){alert('請選擇運送方式');return;}
+  const shipVal=shipping.value;
+  if(shipVal==='home'&&!document.getElementById('o-address').value.trim()){alert('請填寫收件地址');return;}
+  if((shipVal==='711'||shipVal==='family')&&!document.getElementById('o-store').value.trim()){alert('請填寫超商門市名稱');return;}
+
+  const shipLabel={'home':'宅配到府','711':'7-11 超商取貨','family':'全家超商取貨'};
+  const payLabel={'atm':'ATM 轉帳','cod':'貨到付款','card':'信用卡'};
+  const sub=cart.reduce((s,x)=>s+x.price*x.qty,0);
+  const shipFee=sub>=1200?0:60;
+  const total=sub+shipFee;
+  const orderId='ORD-'+Date.now().toString().slice(-8);
+
+  // 填入訂單詳情
+  document.getElementById('order-id-display').textContent='訂單編號：'+orderId;
+  document.getElementById('order-items-display').innerHTML=cart.map(item=>`
+    <div style="display:flex;align-items:center;gap:.8rem;padding:.6rem 0;border-bottom:1px solid var(--border);">
+      <div style="width:48px;height:48px;border-radius:8px;background:linear-gradient(135deg,var(--pink),var(--pink2));display:flex;align-items:center;justify-content:center;font-size:1.4rem;overflow:hidden;flex-shrink:0;">
+        ${item.imgs&&item.imgs[0]?`<img src="${item.imgs[0]}" style="width:100%;height:100%;object-fit:cover;">`:'🌸'}
+      </div>
+      <div style="flex:1;font-size:.88rem;color:var(--text);">${item.name}</div>
+      <div style="font-size:.85rem;color:var(--text2);">x${item.qty}</div>
+      <div style="font-size:.9rem;color:var(--pink4);font-weight:500;">NT$${item.price*item.qty}</div>
+    </div>`).join('');
+  document.getElementById('od-subtotal').textContent=`NT$${sub}`;
+  document.getElementById('od-shipping').textContent=shipFee===0?'免運':`NT$${shipFee}`;
+  document.getElementById('od-total').textContent=`NT$${total}`;
+
+  let infoHTML=`收件人：${name}<br>電話：${phone}<br>Email：${email}<br>運送方式：${shipLabel[shipVal]}<br>`;
+  if(shipVal==='home') infoHTML+=`地址：${document.getElementById('o-address').value.trim()}<br>`;
+  if(shipVal==='711'||shipVal==='family') infoHTML+=`門市：${document.getElementById('o-store').value.trim()}<br>`;
+  const note=document.getElementById('o-note').value.trim();
+  if(note) infoHTML+=`備註：${note}`;
+  document.getElementById('order-info-display').innerHTML=infoHTML;
+
+  const payVal=payment?payment.value:'atm';
+  let payHTML=`付款方式：${payLabel[payVal]}<br>`;
+  if(payVal==='atm') payHTML+=`銀行：玉山銀行 808<br>帳號：1234-567-890123<br><span style="color:var(--pink4);font-size:.82rem;">※ 請於 3 天內完成匯款，並保留收據</span>`;
+  if(payVal==='cod') payHTML+=`<span style="color:var(--pink4);font-size:.82rem;">※ 商品送達時付款給配送員</span>`;
+  document.getElementById('order-payment-display').innerHTML=payHTML;
+
+  // 清空購物車
+  cart=[];
+  updateCartCount();
+  show('orderdetail');
 };
 window.sendContactEmail=async function(){
   const name=document.getElementById('contact-name').value.trim();
