@@ -5,8 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>櫻花喵小舖</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@300;400;500&family=Zen+Maru+Gothic:wght@300;400;500&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-<script>emailjs.init('i959u2b6f_PFAxYur');</script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
 :root{
@@ -483,7 +481,7 @@ window.galleryNav=galleryNav;
 window.setGallery=setGallery;
 window.addToCart=addToCart;
 window.changeQty=changeQty;
-window.sendContactEmail=function(){
+window.sendContactEmail=async function(){
   const name=document.getElementById('contact-name').value.trim();
   const contact=document.getElementById('contact-contact').value.trim();
   const type=document.getElementById('contact-type').value;
@@ -492,22 +490,26 @@ window.sendContactEmail=function(){
   const btn=document.querySelector('#contact .btn-primary');
   btn.textContent='寄送中…';
   btn.disabled=true;
-  emailjs.send('service_duhxyd7','template_sjv315h',{
-    from_name: name,
-    contact: contact,
-    type: type,
-    message: msg,
-  }).then(()=>{
-    btn.textContent='✓ 已送出！';
-    btn.style.background='#2e7d32';
-    document.getElementById('contact-name').value='';
-    document.getElementById('contact-contact').value='';
-    document.getElementById('contact-msg').value='';
-    setTimeout(()=>{btn.textContent='送出訊息 →';btn.style.background='';btn.disabled=false;},3000);
-  }).catch(()=>{
+  try{
+    const res=await fetch('https://formspree.io/f/xwvzwdgo',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Accept':'application/json'},
+      body:JSON.stringify({name,contact,type,message:msg})
+    });
+    if(res.ok){
+      btn.textContent='✓ 已送出！';
+      btn.style.background='#2e7d32';
+      document.getElementById('contact-name').value='';
+      document.getElementById('contact-contact').value='';
+      document.getElementById('contact-msg').value='';
+      setTimeout(()=>{btn.textContent='送出訊息 →';btn.style.background='';btn.disabled=false;},3000);
+    }else{
+      throw new Error();
+    }
+  }catch(e){
     btn.textContent='送出失敗，請再試一次';
     btn.disabled=false;
-  });
+  }
 };
 </script>
 </body>
