@@ -82,6 +82,50 @@ nav{background:#ffffff;border-bottom:1.5px solid var(--border);position:sticky;t
 .checkout-btn:hover{background:#9a4a65;}
 .toast{position:fixed;bottom:2rem;right:2rem;background:var(--pink4);color:#ffffff;padding:.7rem 1.4rem;border-radius:12px;font-size:.85rem;transform:translateY(60px);opacity:0;transition:all .35s;z-index:999;}
 .toast.show{transform:translateY(0);opacity:1;}
+
+/* ── 商品詳情 Modal ── */
+.modal-backdrop{position:fixed;inset:0;background:rgba(40,15,25,.45);z-index:500;opacity:0;pointer-events:none;transition:opacity .3s;}
+.modal-backdrop.open{opacity:1;pointer-events:all;}
+.modal-panel{position:fixed;top:0;right:0;height:100%;width:min(680px,100%);background:#ffffff;z-index:501;transform:translateX(100%);transition:transform .38s cubic-bezier(.32,.72,0,1);overflow-y:auto;display:flex;flex-direction:column;}
+.modal-panel.open{transform:translateX(0);}
+.modal-close{position:sticky;top:0;background:#ffffff;border-bottom:1px solid var(--border);padding:.8rem 1.2rem;display:flex;align-items:center;justify-content:space-between;z-index:10;}
+.modal-close-btn{background:var(--pink);border:none;border-radius:50%;width:36px;height:36px;font-size:1.1rem;cursor:pointer;color:var(--pink4);display:flex;align-items:center;justify-content:center;transition:background .2s;}
+.modal-close-btn:hover{background:var(--pink2);}
+.modal-breadcrumb{font-size:.8rem;color:var(--text2);}
+.modal-body{padding:1.5rem;flex:1;}
+/* 圖片輪播 */
+.gallery{border-radius:16px;overflow:hidden;background:linear-gradient(145deg,var(--pink),var(--pink2));aspect-ratio:1;position:relative;margin-bottom:1rem;}
+.gallery-main{width:100%;height:100%;object-fit:cover;display:flex;align-items:center;justify-content:center;font-size:5rem;}
+.gallery-main img{width:100%;height:100%;object-fit:cover;}
+.gallery-arrow{position:absolute;top:50%;transform:translateY(-50%);background:rgba(255,255,255,.85);border:none;border-radius:50%;width:36px;height:36px;font-size:1rem;cursor:pointer;color:var(--pink4);display:flex;align-items:center;justify-content:center;transition:background .2s;z-index:5;}
+.gallery-arrow:hover{background:#ffffff;}
+.gallery-arrow.prev{left:.8rem;}
+.gallery-arrow.next{right:.8rem;}
+.gallery-dots{display:flex;gap:.4rem;justify-content:center;margin-bottom:1.2rem;}
+.gallery-dot{width:7px;height:7px;border-radius:50%;background:var(--pink2);border:none;cursor:pointer;transition:background .2s;padding:0;}
+.gallery-dot.active{background:var(--pink4);}
+.gallery-thumbs{display:flex;gap:.5rem;margin-bottom:1.2rem;overflow-x:auto;padding-bottom:.3rem;}
+.gallery-thumb{width:64px;height:64px;border-radius:10px;border:2px solid transparent;cursor:pointer;overflow:hidden;flex-shrink:0;background:linear-gradient(145deg,var(--pink),var(--pink2));display:flex;align-items:center;justify-content:center;font-size:1.6rem;transition:border-color .2s;}
+.gallery-thumb.active{border-color:var(--pink4);}
+.gallery-thumb img{width:100%;height:100%;object-fit:cover;}
+/* 商品資訊 */
+.modal-product-tag{display:inline-block;background:var(--pink);color:var(--pink4);font-size:.72rem;border-radius:10px;padding:.18rem .7rem;margin-bottom:.5rem;}
+.modal-product-name{font-family:'Noto Serif TC',serif;font-size:1.4rem;font-weight:500;color:var(--text);margin-bottom:.4rem;}
+.modal-product-price{color:var(--pink4);font-size:1.3rem;font-weight:500;margin-bottom:1rem;}
+.modal-product-price s{color:var(--text2);font-size:.95rem;margin-left:.5rem;font-weight:400;}
+.modal-divider{border:none;border-top:1px solid var(--border);margin:1rem 0;}
+.modal-desc-title{font-size:.85rem;font-weight:500;color:var(--text);margin-bottom:.5rem;}
+.modal-desc{font-size:.88rem;color:var(--text2);line-height:2;}
+.modal-specs{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin-top:.8rem;}
+.modal-spec{background:var(--cream);border-radius:10px;padding:.6rem .8rem;}
+.modal-spec-label{font-size:.72rem;color:var(--text2);margin-bottom:.15rem;}
+.modal-spec-value{font-size:.85rem;color:var(--text);font-weight:500;}
+.modal-actions{padding:1.2rem 1.5rem;border-top:1px solid var(--border);display:flex;gap:.8rem;background:#ffffff;position:sticky;bottom:0;}
+.modal-add-btn{flex:1;background:var(--pink4);color:#ffffff;border:none;border-radius:12px;padding:.75rem;font-size:.92rem;cursor:pointer;font-family:inherit;transition:background .2s;}
+.modal-add-btn:hover{background:#9a4a65;}
+.modal-wish-btn{background:var(--pink);border:1.5px solid var(--border);border-radius:12px;padding:.75rem 1rem;font-size:1rem;cursor:pointer;transition:background .2s;}
+.modal-wish-btn:hover{background:var(--pink2);}
+
 @media(max-width:640px){
   .checkout-layout{grid-template-columns:1fr;}
   .hero{padding:2.5rem 1.5rem;}
@@ -138,14 +182,14 @@ nav{background:#ffffff;border-bottom:1.5px solid var(--border);position:sticky;t
     <button class="cat-tab" onclick="filterCat(this,'sale')">特價專區</button>
   </div>
   <div class="product-grid" id="shop-grid">
-    <div class="product-card" data-cat="dress"><div class="product-img">🌸</div><div class="product-info"><span class="product-tag">娃衣</span><div class="product-name">春日和服套裝</div><div class="product-price">NT$380 <s>NT$450</s></div><button class="add-btn" onclick="addCart()">加入購物車 +</button></div></div>
-    <div class="product-card" data-cat="dress"><div class="product-img">🎀</div><div class="product-info"><span class="product-tag">娃衣</span><div class="product-name">蕾絲洋裝 粉色款</div><div class="product-price">NT$320</div><button class="add-btn" onclick="addCart()">加入購物車 +</button></div></div>
-    <div class="product-card" data-cat="dress"><div class="product-img">🌙</div><div class="product-info"><span class="product-tag">娃衣</span><div class="product-name">夜空洋裝 黑藍款</div><div class="product-price">NT$420</div><button class="add-btn" onclick="addCart()">加入購物車 +</button></div></div>
-    <div class="product-card" data-cat="blind"><div class="product-img">🎁</div><div class="product-info"><span class="product-tag">盲盒</span><div class="product-name">貓咪系列盲盒</div><div class="product-price">NT$280</div><button class="add-btn" onclick="addCart()">加入購物車 +</button></div></div>
-    <div class="product-card" data-cat="blind"><div class="product-img">⭐</div><div class="product-info"><span class="product-tag">盲盒</span><div class="product-name">星空限定盲盒</div><div class="product-price">NT$350</div><button class="add-btn" onclick="addCart()">加入購物車 +</button></div></div>
-    <div class="product-card" data-cat="blind"><div class="product-img">🌷</div><div class="product-info"><span class="product-tag">盲盒</span><div class="product-name">花園系列盲盒</div><div class="product-price">NT$280</div><button class="add-btn" onclick="addCart()">加入購物車 +</button></div></div>
-    <div class="product-card" data-cat="acc"><div class="product-img">💎</div><div class="product-info"><span class="product-tag">配件</span><div class="product-name">蝴蝶結髮圈組</div><div class="product-price">NT$120</div><button class="add-btn" onclick="addCart()">加入購物車 +</button></div></div>
-    <div class="product-card" data-cat="sale"><div class="product-img">🎵</div><div class="product-info"><span class="product-tag">特價</span><div class="product-name">音樂主題套裝</div><div class="product-price">NT$199 <s>NT$360</s></div><button class="add-btn" onclick="addCart()">加入購物車 +</button></div></div>
+    <div class="product-card" data-cat="dress" onclick="openModal(this)" data-tag="娃衣" data-name="春日和服套裝" data-price="NT$380" data-oldprice="NT$450" data-emoji="🌸" data-desc="融合傳統和服工藝與現代娃衣設計，採用細膩印花布料，腰帶可拆卸，附贈髮飾一件。適合 OB11、GSC 等多款尺寸。" data-specs='[["布料","高質感棉麻混紡"],["適用尺寸","OB11 / GSC"],["顏色","粉白・淡金"],["附件","腰帶＋髮飾"]]' data-imgs='["🌸","🎀","✨"]'><div class="product-img">🌸</div><div class="product-info"><span class="product-tag">娃衣</span><div class="product-name">春日和服套裝</div><div class="product-price">NT$380 <s>NT$450</s></div><button class="add-btn" onclick="event.stopPropagation();addCart()">加入購物車 +</button></div></div>
+    <div class="product-card" data-cat="dress" onclick="openModal(this)" data-tag="娃衣" data-name="蕾絲洋裝 粉色款" data-price="NT$320" data-emoji="🎀" data-desc="精緻蕾絲花邊設計，背部蝴蝶結綁帶，穿脫方便。甜美粉色系適合各種造型拍攝，是娃衣收藏家的必備款。" data-specs='[["布料","蕾絲+雪紡"],["適用尺寸","OB11"],["顏色","粉色・白色"],["附件","蝴蝶結髮箍"]]' data-imgs='["🎀","🌸","💝"]'><div class="product-img">🎀</div><div class="product-info"><span class="product-tag">娃衣</span><div class="product-name">蕾絲洋裝 粉色款</div><div class="product-price">NT$320</div><button class="add-btn" onclick="event.stopPropagation();addCart()">加入購物車 +</button></div></div>
+    <div class="product-card" data-cat="dress" onclick="openModal(this)" data-tag="娃衣" data-name="夜空洋裝 黑藍款" data-price="NT$420" data-emoji="🌙" data-desc="深邃星空主題設計，採用漸層印染技術，裙擺綴有細密亮片如繁星閃爍。適合夜間主題拍攝與限定場景收藏。" data-specs='[["布料","亮片緞面"],["適用尺寸","OB11 / Blythe"],["顏色","黑・深藍・銀"],["附件","星形胸針"]]' data-imgs='["🌙","⭐","💫"]'><div class="product-img">🌙</div><div class="product-info"><span class="product-tag">娃衣</span><div class="product-name">夜空洋裝 黑藍款</div><div class="product-price">NT$420</div><button class="add-btn" onclick="event.stopPropagation();addCart()">加入購物車 +</button></div></div>
+    <div class="product-card" data-cat="blind" onclick="openModal(this)" data-tag="盲盒" data-name="貓咪系列盲盒" data-price="NT$280" data-emoji="🎁" data-desc="共 6 款隱藏設計，每盒隨機出貨。貓咪主題手工上色，細節精緻，每隻高約 8cm。全套收集可解鎖特別展示台。" data-specs='[["尺寸","約 8cm"],["材質","PVC 無毒塗料"],["款式","共 6 款＋1 隱藏"],["包裝","精裝禮盒"]]' data-imgs='["🎁","🐱","✨"]'><div class="product-img">🎁</div><div class="product-info"><span class="product-tag">盲盒</span><div class="product-name">貓咪系列盲盒</div><div class="product-price">NT$280</div><button class="add-btn" onclick="event.stopPropagation();addCart()">加入購物車 +</button></div></div>
+    <div class="product-card" data-cat="blind" onclick="openModal(this)" data-tag="盲盒" data-name="星空限定盲盒" data-price="NT$350" data-emoji="⭐" data-desc="限量星空系列，以銀河為主題設計，每款盲盒皆配有專屬星座卡。夜光材質，關燈後閃閃發光，獨特收藏價值高。" data-specs='[["尺寸","約 9cm"],["材質","夜光 PVC"],["款式","共 8 款"],["特色","附星座卡"]]' data-imgs='["⭐","🌟","💫"]'><div class="product-img">⭐</div><div class="product-info"><span class="product-tag">盲盒</span><div class="product-name">星空限定盲盒</div><div class="product-price">NT$350</div><button class="add-btn" onclick="event.stopPropagation();addCart()">加入購物車 +</button></div></div>
+    <div class="product-card" data-cat="blind" onclick="openModal(this)" data-tag="盲盒" data-name="花園系列盲盒" data-price="NT$280" data-emoji="🌷" data-desc="春日花園主題，以各式花卉為靈感設計 6 款可愛角色。色彩鮮豔飽和，適合陳列展示，也是送禮的好選擇。" data-specs='[["尺寸","約 7.5cm"],["材質","ABS 無毒"],["款式","共 6 款＋1 隱藏"],["包裝","花窗禮盒"]]' data-imgs='["🌷","🌸","🌼"]'><div class="product-img">🌷</div><div class="product-info"><span class="product-tag">盲盒</span><div class="product-name">花園系列盲盒</div><div class="product-price">NT$280</div><button class="add-btn" onclick="event.stopPropagation();addCart()">加入購物車 +</button></div></div>
+    <div class="product-card" data-cat="acc" onclick="openModal(this)" data-tag="配件" data-name="蝴蝶結髮圈組" data-price="NT$120" data-emoji="💎" data-desc="手工製作蝴蝶結髮圈，一組共 4 入，顏色分別為粉白、粉紫、粉藍、奶茶色。細緻做工，不傷娃娃頭髮。" data-specs='[["數量","4 入一組"],["材質","緞帶+鬆緊帶"],["顏色","4色混裝"],["適用","OB11 / Blythe"]]' data-imgs='["💎","🎀","✨"]'><div class="product-img">💎</div><div class="product-info"><span class="product-tag">配件</span><div class="product-name">蝴蝶結髮圈組</div><div class="product-price">NT$120</div><button class="add-btn" onclick="event.stopPropagation();addCart()">加入購物車 +</button></div></div>
+    <div class="product-card" data-cat="sale" onclick="openModal(this)" data-tag="特價" data-name="音樂主題套裝" data-price="NT$199" data-oldprice="NT$360" data-emoji="🎵" data-desc="【限時特價】音符與旋律主題的夢幻套裝，含上衣、裙子、小型道具樂器三件。庫存有限，售完不補。" data-specs='[["套裝內容","上衣＋裙子＋道具"],["適用尺寸","OB11"],["顏色","黑白・金色點綴"],["庫存","少量現貨"]]' data-imgs='["🎵","🎶","⭐"]'><div class="product-img">🎵</div><div class="product-info"><span class="product-tag">特價</span><div class="product-name">音樂主題套裝</div><div class="product-price">NT$199 <s>NT$360</s></div><button class="add-btn" onclick="event.stopPropagation();addCart()">加入購物車 +</button></div></div>
   </div>
 </div>
 <!-- ABOUT -->
@@ -209,11 +253,109 @@ nav{background:#ffffff;border-bottom:1.5px solid var(--border);position:sticky;t
     </div>
   </div>
 </div>
+<!-- 商品詳情 Modal -->
+<div class="modal-backdrop" id="modal-backdrop" onclick="closeModal()"></div>
+<div class="modal-panel" id="modal-panel">
+  <div class="modal-close">
+    <span class="modal-breadcrumb">商品 &rsaquo; <span id="modal-breadcrumb-name">詳情</span></span>
+    <button class="modal-close-btn" onclick="closeModal()">✕</button>
+  </div>
+  <div class="modal-body">
+    <!-- 圖片輪播 -->
+    <div class="gallery" id="modal-gallery">
+      <div class="gallery-main" id="modal-gallery-main"></div>
+      <button class="gallery-arrow prev" onclick="galleryNav(-1)">‹</button>
+      <button class="gallery-arrow next" onclick="galleryNav(1)">›</button>
+    </div>
+    <div class="gallery-dots" id="modal-gallery-dots"></div>
+    <div class="gallery-thumbs" id="modal-gallery-thumbs"></div>
+    <!-- 商品資訊 -->
+    <span class="modal-product-tag" id="modal-tag"></span>
+    <div class="modal-product-name" id="modal-name"></div>
+    <div class="modal-product-price" id="modal-price"></div>
+    <hr class="modal-divider">
+    <div class="modal-desc-title">商品介紹</div>
+    <div class="modal-desc" id="modal-desc"></div>
+    <div class="modal-specs" id="modal-specs"></div>
+  </div>
+  <div class="modal-actions">
+    <button class="modal-wish-btn">🤍</button>
+    <button class="modal-add-btn" onclick="addCart();showToast()">加入購物車 +</button>
+  </div>
+</div>
+
 <div class="toast" id="toast">✓ 已加入購物車！</div>
 <script>
+// ── 頁面切換 ──
 function show(id){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById(id).classList.add('active');window.scrollTo(0,0);}
-function addCart(){const c=document.getElementById('cart-count');c.textContent=parseInt(c.textContent)+1;const t=document.getElementById('toast');t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200);}
+
+// ── 購物車 ──
+function addCart(){const c=document.getElementById('cart-count');c.textContent=parseInt(c.textContent)+1;}
+function showToast(){const t=document.getElementById('toast');t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200);}
+
+// ── 分類篩選 ──
 function filterCat(btn,cat){document.querySelectorAll('.cat-tab').forEach(b=>b.classList.remove('active'));btn.classList.add('active');document.querySelectorAll('#shop-grid .product-card').forEach(c=>{c.style.display=(cat==='all'||c.dataset.cat===cat)?'block':'none';});}
+
+// ── 商品詳情 Modal ──
+let galleryImgs=[], galleryIdx=0;
+
+function openModal(card){
+  const d=card.dataset;
+  document.getElementById('modal-breadcrumb-name').textContent=d.name;
+  document.getElementById('modal-tag').textContent=d.tag;
+  document.getElementById('modal-name').textContent=d.name;
+  // 價格
+  const priceEl=document.getElementById('modal-price');
+  priceEl.innerHTML=d.price+(d.oldprice?` <s>${d.oldprice}</s>`:'');
+  document.getElementById('modal-desc').textContent=d.desc||'';
+  // 規格
+  const specs=JSON.parse(d.specs||'[]');
+  document.getElementById('modal-specs').innerHTML=specs.map(([l,v])=>`<div class="modal-spec"><div class="modal-spec-label">${l}</div><div class="modal-spec-value">${v}</div></div>`).join('');
+  // 圖片
+  galleryImgs=JSON.parse(d.imgs||'[]');
+  if(!galleryImgs.length) galleryImgs=[d.emoji||'🌸'];
+  galleryIdx=0;
+  renderGallery();
+  // 開啟
+  document.getElementById('modal-backdrop').classList.add('open');
+  document.getElementById('modal-panel').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+
+function closeModal(){
+  document.getElementById('modal-backdrop').classList.remove('open');
+  document.getElementById('modal-panel').classList.remove('open');
+  document.body.style.overflow='';
+}
+
+function renderGallery(){
+  const main=document.getElementById('modal-gallery-main');
+  const dots=document.getElementById('modal-gallery-dots');
+  const thumbs=document.getElementById('modal-gallery-thumbs');
+  // 主圖
+  const cur=galleryImgs[galleryIdx];
+  if(cur.startsWith('http')||cur.match(/\.(png|jpg|jpeg|webp|gif)$/i)){
+    main.innerHTML=`<img src="${cur}" alt="商品圖">`;
+  } else {
+    main.innerHTML=`<span style="font-size:5rem">${cur}</span>`;
+  }
+  // 小點
+  dots.innerHTML=galleryImgs.map((_,i)=>`<button class="gallery-dot${i===galleryIdx?' active':''}" onclick="setGallery(${i})"></button>`).join('');
+  // 縮圖
+  thumbs.innerHTML=galleryImgs.map((img,i)=>{
+    const isImg=img.startsWith('http')||img.match(/\.(png|jpg|jpeg|webp|gif)$/i);
+    return `<div class="gallery-thumb${i===galleryIdx?' active':''}" onclick="setGallery(${i})">${isImg?`<img src="${img}">`:`<span>${img}</span>`}</div>`;
+  }).join('');
+  // 箭頭顯示
+  document.querySelector('.gallery-arrow.prev').style.display=galleryImgs.length>1?'flex':'none';
+  document.querySelector('.gallery-arrow.next').style.display=galleryImgs.length>1?'flex':'none';
+}
+
+function setGallery(i){galleryIdx=i;renderGallery();}
+function galleryNav(dir){galleryIdx=(galleryIdx+dir+galleryImgs.length)%galleryImgs.length;renderGallery();}
+
+// 鍵盤關閉
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
 </script>
 </body>
 </html>
