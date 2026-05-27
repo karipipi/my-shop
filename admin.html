@@ -62,6 +62,7 @@ th{background:var(--cream);font-size:.78rem;color:var(--text2);font-weight:500;p
 td{font-size:.83rem;color:var(--text);padding:.8rem 1rem;border-bottom:1px solid #f5eef2;vertical-align:middle;}
 tr:last-child td{border-bottom:none;}
 tr:hover td{background:#fdf5f8;}
+tr[onclick]:hover td{background:#fdf0f5;cursor:pointer;}
 .td-img{width:44px;height:44px;border-radius:8px;background:linear-gradient(135deg,var(--pink),var(--pink2));display:flex;align-items:center;justify-content:center;font-size:1.4rem;overflow:hidden;flex-shrink:0;}
 .td-img img{width:100%;height:100%;object-fit:cover;}
 .badge{display:inline-block;font-size:.7rem;border-radius:8px;padding:.18rem .6rem;font-weight:500;}
@@ -552,17 +553,32 @@ function renderOrders(){
   const empty=document.getElementById('order-empty');
   if(!filtered.length){tbody.innerHTML='';empty.style.display='block';return;}
   empty.style.display='none';
+  const tbody=document.getElementById('order-table');
+  const empty=document.getElementById('order-empty');
+  if(!filtered.length){tbody.innerHTML='';empty.style.display='block';return;}
+  empty.style.display='none';
   tbody.innerHTML=filtered.map(o=>{
     const date=o.createdAt?new Date(o.createdAt.seconds*1000).toLocaleDateString('zh-TW'):'—';
     const payColor=o.payStatus==='已付款'?'#2e7d32':'#c62828';
-    return `<tr>
-      <td style="font-size:.78rem;"><div style="font-weight:500;">${o.orderId}</div><div style="color:var(--text2);font-size:.72rem;">${date}</div></td>
+    const firstImg=o.items&&o.items[0]&&o.items[0].img?o.items[0].img:'';
+    return `<tr onclick="openOrderDetail('${o._docId}')" style="cursor:pointer;">
+      <td>
+        <div style="display:flex;align-items:center;gap:.8rem;">
+          <div style="width:48px;height:48px;border-radius:8px;background:linear-gradient(135deg,var(--pink),var(--pink2));overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1.2rem;">
+            ${firstImg?`<img src="${firstImg}" style="width:100%;height:100%;object-fit:cover;">`:'🌸'}
+          </div>
+          <div>
+            <div style="font-size:.82rem;font-weight:500;">${o.orderId}</div>
+            <div style="font-size:.72rem;color:var(--text2);">${date}</div>
+          </div>
+        </div>
+      </td>
       <td style="font-size:.82rem;"><div>${o.name}</div><div style="color:var(--text2);font-size:.72rem;">${o.phone}</div></td>
-      <td style="font-size:.78rem;max-width:150px;">${(o.items||[]).map(i=>`${i.name} x${i.qty}`).join('、')}</td>
-      <td style="font-size:.85rem;color:var(--pink4);font-weight:500;">NT$${o.total}</td>
-      <td><span style="font-size:.72rem;color:${payColor};background:${payColor}22;border-radius:6px;padding:.15rem .5rem;">${o.payStatus}</span></td>
+      <td style="font-size:.78rem;max-width:150px;color:var(--text2);">${(o.items||[]).map(i=>`${i.name} ×${i.qty}`).join('、')}</td>
+      <td style="font-size:.88rem;color:var(--pink4);font-weight:500;">NT$${o.total}</td>
+      <td><span style="font-size:.72rem;color:${payColor};background:${payColor}22;border-radius:6px;padding:.2rem .6rem;white-space:nowrap;">${o.payStatus}</span></td>
       <td><span class="badge ${ORDER_STATUS_COLOR[o.status]||'badge-dress'}">${o.status}</span></td>
-      <td><button class="btn btn-outline btn-sm" onclick="openOrderDetail('${o._docId}')">查看</button></td>
+      <td><button class="btn btn-outline btn-sm" onclick="event.stopPropagation();openOrderDetail('${o._docId}')">查看</button></td>
     </tr>`;
   }).join('');
 }
@@ -575,14 +591,20 @@ function openOrderDetail(docId){
   const date=o.createdAt?new Date(o.createdAt.seconds*1000).toLocaleString('zh-TW'):'—';
   document.getElementById('od-modal-body').innerHTML=`
     <div style="margin-bottom:.8rem;padding-bottom:.8rem;border-bottom:1px solid var(--border);">
-      <div style="font-weight:500;color:var(--text);margin-bottom:.4rem;">🛍 訂購商品</div>
-      ${(o.items||[]).map(i=>`<div style="display:flex;justify-content:space-between;padding:.3rem 0;">
-        <span>${i.name} x${i.qty}</span><span style="color:var(--pink4);">NT$${i.price*i.qty}</span>
-      </div>`).join('')}
-      <div style="display:flex;justify-content:space-between;margin-top:.4rem;padding-top:.4rem;border-top:1px solid var(--border);">
-        <span>運費</span><span>${o.shipFee===0?'免運':'NT$'+o.shipFee}</span>
+      <div style="font-weight:500;color:var(--text);margin-bottom:.6rem;">🛍 訂購商品</div>
+      ${(o.items||[]).map(i=>`
+        <div style="display:flex;align-items:center;gap:.8rem;padding:.5rem 0;border-bottom:1px solid var(--border);">
+          <div style="width:48px;height:48px;border-radius:8px;background:linear-gradient(135deg,var(--pink),var(--pink2));overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1.2rem;">
+            ${i.img?`<img src="${i.img}" style="width:100%;height:100%;object-fit:cover;">`:'🌸'}
+          </div>
+          <div style="flex:1;font-size:.83rem;">${i.name}</div>
+          <div style="font-size:.8rem;color:var(--text2);">×${i.qty}</div>
+          <div style="font-size:.85rem;color:var(--pink4);font-weight:500;">NT$${i.price*i.qty}</div>
+        </div>`).join('')}
+      <div style="display:flex;justify-content:space-between;margin-top:.6rem;font-size:.83rem;">
+        <span style="color:var(--text2);">運費</span><span>${o.shipFee===0?'免運':'NT$'+o.shipFee}</span>
       </div>
-      <div style="display:flex;justify-content:space-between;font-weight:500;color:var(--pink4);">
+      <div style="display:flex;justify-content:space-between;font-weight:500;color:var(--pink4);font-size:.95rem;">
         <span>總計</span><span>NT$${o.total}</span>
       </div>
     </div>
