@@ -553,10 +553,6 @@ function renderOrders(){
   const empty=document.getElementById('order-empty');
   if(!filtered.length){tbody.innerHTML='';empty.style.display='block';return;}
   empty.style.display='none';
-  const tbody=document.getElementById('order-table');
-  const empty=document.getElementById('order-empty');
-  if(!filtered.length){tbody.innerHTML='';empty.style.display='block';return;}
-  empty.style.display='none';
   tbody.innerHTML=filtered.map(o=>{
     const date=o.createdAt?new Date(o.createdAt.seconds*1000).toLocaleDateString('zh-TW'):'—';
     const payColor=o.payStatus==='已付款'?'#2e7d32':'#c62828';
