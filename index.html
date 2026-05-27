@@ -39,7 +39,6 @@ nav{background:#ffffff;border-bottom:1.5px solid var(--border);position:sticky;t
 .hero p{color:var(--text2);font-size:1rem;line-height:1.9;max-width:480px;margin:0 auto 1.5rem;}
 .hero-btns{display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;}
 /* Banner 輪播 */
-.banner-wrapper{position:relative;width:100vw;left:50%;transform:translateX(-50%);margin-bottom:2rem;margin-top:-2rem;}
 .banner-slider{position:relative;width:100%;overflow:hidden;background:var(--pink);aspect-ratio:16/6;}
 .banner-track{display:flex;height:100%;transition:transform .5s cubic-bezier(.4,0,.2,1);}
 .banner-slide{min-width:100%;height:100%;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;}
@@ -52,11 +51,10 @@ nav{background:#ffffff;border-bottom:1.5px solid var(--border);position:sticky;t
 .banner-arrow:hover{background:#fff;}
 .banner-arrow.prev{left:.8rem;}
 .banner-arrow.next{right:.8rem;}
-.banner-dots{display:flex;gap:.5rem;justify-content:center;margin-top:.8rem;margin-bottom:1.5rem;}
+.banner-dots{display:flex;gap:.5rem;justify-content:center;padding:.8rem 0 1.2rem;}
 .banner-dot{width:8px;height:8px;border-radius:50%;background:var(--pink2);border:none;cursor:pointer;padding:0;transition:all .2s;}
 .banner-dot.active{background:var(--pink4);width:20px;border-radius:4px;}
 @media(max-width:768px){
-  .banner-wrapper{width:100%;left:0;transform:none;margin-top:-1rem;}
   .banner-slider{aspect-ratio:16/9;}
   .banner-slide-placeholder .b-title{font-size:1.1rem;}
   .banner-arrow{width:32px;height:32px;font-size:1rem;}
@@ -274,16 +272,18 @@ nav{background:#ffffff;border-bottom:1.5px solid var(--border);position:sticky;t
   <a href="#" onclick="show('myorders');toggleMobileMenu()">我的訂單</a>
   <button class="mobile-cart" onclick="show('checkout');toggleMobileMenu()">🛒 購物車 <span id="cart-count-mobile">0</span></button>
 </div>
-<!-- HOME -->
-<div class="page active" id="home">
-  <div class="banner-wrapper">
-    <div class="banner-slider" id="banner-slider">
-      <div class="banner-track" id="banner-track"></div>
-      <button class="banner-arrow prev" id="banner-prev" onclick="bannerNav(-1)">‹</button>
-      <button class="banner-arrow next" id="banner-next" onclick="bannerNav(1)">›</button>
-    </div>
+<!-- HOME BANNER（獨立全寬區塊，在 .page 外）-->
+<div id="home-banner-zone" style="display:none;width:100%;position:relative;z-index:1;">
+  <div class="banner-slider" id="banner-slider">
+    <div class="banner-track" id="banner-track"></div>
+    <button class="banner-arrow prev" onclick="bannerNav(-1)">‹</button>
+    <button class="banner-arrow next" onclick="bannerNav(1)">›</button>
   </div>
   <div class="banner-dots" id="banner-dots"></div>
+</div>
+
+<!-- HOME -->
+<div class="page active" id="home">
   <div class="section-title">本週主打商品</div>
   <div class="section-sub">精心挑選，每週更新 ✿</div>
   <div class="product-grid" id="home-grid"></div>
@@ -677,6 +677,9 @@ function show(id){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   window.scrollTo(0,0);
+  // Banner 只在首頁顯示
+  const bannerZone=document.getElementById('home-banner-zone');
+  if(bannerZone) bannerZone.style.display=id==='home'?'block':'none';
   if(id==='checkout') renderCart();
 }
 
@@ -753,6 +756,8 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
 // ════════════════════════════════════════
 loadProducts();
 loadBanners();
+// 初始顯示 banner
+document.getElementById('home-banner-zone').style.display='block';
 
 // 暴露全域函式（module scope 需要）
 window.show=show;
