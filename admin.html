@@ -332,7 +332,8 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
-const ADMIN_EMAIL = "andy3031130311@gmail.com";
+const ADMIN_EMAILS = ["andy3031130311@gmail.com", "amnesia070504@gmail.com"];
+const isAdmin = email => ADMIN_EMAILS.includes(email);
 
 // ════════════════════════════════════════
 // Google 登入
@@ -341,7 +342,7 @@ document.getElementById('login-btn').onclick = async () => {
   try{
     const provider = new GoogleAuthProvider();
     const result = await signInWithPopup(auth, provider);
-    if(result.user.email !== ADMIN_EMAIL){
+    if(result.user.email && !isAdmin(result.user.email)){
       document.getElementById('login-error').style.display='block';
       await auth.signOut();
     }
@@ -349,9 +350,8 @@ document.getElementById('login-btn').onclick = async () => {
 };
 
 onAuthStateChanged(auth, user => {
-  if(user && user.email === ADMIN_EMAIL){
+  if(user && isAdmin(user.email)){
     document.getElementById('login-screen').style.display='none';
-    // 顯示使用者名稱在 topbar
     document.getElementById('admin-user').textContent = user.displayName || user.email;
     initData();
   } else {
