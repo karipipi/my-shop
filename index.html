@@ -182,6 +182,7 @@ nav{background:#ffffff;border-bottom:1.5px solid var(--border);position:sticky;t
       <li><a href="#" onclick="show('shop')">商品</a></li>
       <li><a href="#" onclick="show('about')">關於我們</a></li>
       <li><a href="#" onclick="show('contact')">聯絡</a></li>
+      <li><a href="#" onclick="show('myorders')">我的訂單</a></li>
     </ul>
     <div style="display:flex;align-items:center;gap:.8rem;">
       <button class="nav-cart" onclick="show('checkout')">🛒 購物車 <span id="cart-count">0</span></button>
@@ -192,6 +193,21 @@ nav{background:#ffffff;border-bottom:1.5px solid var(--border);position:sticky;t
   </div>
 </nav>
 
+<!-- MY ORDERS 我的訂單 -->
+<div class="page" id="myorders">
+  <div style="margin-top:1rem;max-width:600px;margin-left:auto;margin-right:auto;">
+    <div class="section-title">我的訂單</div>
+    <div class="section-sub">輸入 Email 查詢訂單 ✿</div>
+    <div style="background:#fff;border-radius:16px;border:1px solid var(--border);padding:1.4rem;margin-bottom:1.2rem;">
+      <div style="display:flex;gap:.6rem;">
+        <input type="email" id="query-email" placeholder="請輸入訂購時的 Email" style="flex:1;border:1.5px solid var(--border);border-radius:10px;padding:.6rem .9rem;font-size:.88rem;font-family:inherit;background:var(--cream);outline:none;">
+        <button class="btn-primary" onclick="queryOrders()" style="white-space:nowrap;">查詢</button>
+      </div>
+    </div>
+    <div id="orders-result"></div>
+  </div>
+</div>
+
 <!-- 手機選單 -->
 <div class="mobile-menu" id="mobile-menu">
   <button class="mobile-menu-close" onclick="toggleMobileMenu()">✕</button>
@@ -199,6 +215,7 @@ nav{background:#ffffff;border-bottom:1.5px solid var(--border);position:sticky;t
   <a href="#" onclick="show('shop');toggleMobileMenu()">商品</a>
   <a href="#" onclick="show('about');toggleMobileMenu()">關於我們</a>
   <a href="#" onclick="show('contact');toggleMobileMenu()">聯絡</a>
+  <a href="#" onclick="show('myorders');toggleMobileMenu()">我的訂單</a>
   <button class="mobile-cart" onclick="show('checkout');toggleMobileMenu()">🛒 購物車 <span id="cart-count-mobile">0</span></button>
 </div>
 <!-- HOME -->
@@ -408,7 +425,7 @@ nav{background:#ffffff;border-bottom:1.5px solid var(--border);position:sticky;t
 // Firebase 設定
 // ════════════════════════════════════════
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
-import { getFirestore, collection, getDocs, onSnapshot, orderBy, query } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+import { getFirestore, collection, addDoc, onSnapshot, orderBy, query, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBo8hfvLBQ4lB5NgP_wbUP44n6U0jdC4lE",
@@ -618,6 +635,7 @@ window.galleryNav=galleryNav;
 window.setGallery=setGallery;
 window.addToCart=addToCart;
 window.changeQty=changeQty;
+window.queryOrders=window.queryOrders;
 window.toggleMobileMenu=function(){
   document.getElementById('mobile-menu').classList.toggle('open');
 };
@@ -629,7 +647,7 @@ window.handleShipping=function(radio){
   document.getElementById('address-wrap').style.display=radio.value==='home'?'block':'none';
   document.getElementById('store-wrap').style.display=(radio.value==='711'||radio.value==='family')?'block':'none';
 };
-window.submitOrder=function(){
+window.submitOrder=async function(){
   const name=document.getElementById('o-name').value.trim();
   const phone=document.getElementById('o-phone').value.trim();
   const email=document.getElementById('o-email').value.trim();
@@ -647,12 +665,26 @@ window.submitOrder=function(){
   const shipFee=sub>=1200?0:60;
   const total=sub+shipFee;
   const orderId='ORD-'+Date.now().toString().slice(-8);
+  const payVal=payment?payment.value:'atm';
 
-  // 填入訂單詳情
+  const orderData={
+    orderId, email:email.toLowerCase(), name, phone,
+    shipping:shipVal, shippingLabel:shipLabel[shipVal],
+    address:shipVal==='home'?document.getElementById('o-address').value.trim():'',
+    store:(shipVal==='711'||shipVal==='family')?document.getElementById('o-store').value.trim():'',
+    payment:payVal, paymentLabel:payLabel[payVal],
+    note:document.getElementById('o-note').value.trim(),
+    items:cart.map(x=>({id:x.id,name:x.name,price:x.price,qty:x.qty,img:x.imgs&&x.imgs[0]?x.imgs[0]:''})),
+    subtotal:sub, shipFee, total,
+    status:'待確認', payStatus:'未付款',
+    createdAt:serverTimestamp(),
+  };
+  try{ await addDoc(collection(db,'orders'),orderData); }catch(e){ console.error(e); }
+
   document.getElementById('order-id-display').textContent='訂單編號：'+orderId;
   document.getElementById('order-items-display').innerHTML=cart.map(item=>`
     <div style="display:flex;align-items:center;gap:.8rem;padding:.6rem 0;border-bottom:1px solid var(--border);">
-      <div style="width:48px;height:48px;border-radius:8px;background:linear-gradient(135deg,var(--pink),var(--pink2));display:flex;align-items:center;justify-content:center;font-size:1.4rem;overflow:hidden;flex-shrink:0;">
+      <div style="width:48px;height:48px;border-radius:8px;background:linear-gradient(135deg,var(--pink),var(--pink2));display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;">
         ${item.imgs&&item.imgs[0]?`<img src="${item.imgs[0]}" style="width:100%;height:100%;object-fit:cover;">`:'🌸'}
       </div>
       <div style="flex:1;font-size:.88rem;color:var(--text);">${item.name}</div>
@@ -662,24 +694,61 @@ window.submitOrder=function(){
   document.getElementById('od-subtotal').textContent=`NT$${sub}`;
   document.getElementById('od-shipping').textContent=shipFee===0?'免運':`NT$${shipFee}`;
   document.getElementById('od-total').textContent=`NT$${total}`;
-
   let infoHTML=`收件人：${name}<br>電話：${phone}<br>Email：${email}<br>運送方式：${shipLabel[shipVal]}<br>`;
   if(shipVal==='home') infoHTML+=`地址：${document.getElementById('o-address').value.trim()}<br>`;
   if(shipVal==='711'||shipVal==='family') infoHTML+=`門市：${document.getElementById('o-store').value.trim()}<br>`;
   const note=document.getElementById('o-note').value.trim();
   if(note) infoHTML+=`備註：${note}`;
   document.getElementById('order-info-display').innerHTML=infoHTML;
-
-  const payVal=payment?payment.value:'atm';
   let payHTML=`付款方式：${payLabel[payVal]}<br>`;
   if(payVal==='atm') payHTML+=`銀行：玉山銀行 808<br>帳號：1234-567-890123<br><span style="color:var(--pink4);font-size:.82rem;">※ 請於 3 天內完成匯款，並保留收據</span>`;
   if(payVal==='cod') payHTML+=`<span style="color:var(--pink4);font-size:.82rem;">※ 商品送達時付款給配送員</span>`;
   document.getElementById('order-payment-display').innerHTML=payHTML;
-
-  // 清空購物車
-  cart=[];
-  updateCartCount();
+  cart=[];updateCartCount();
   show('orderdetail');
+};
+
+const STATUS_COLOR={'待確認':'#e65100','處理中':'#1565c0','已出貨':'#2e7d32','已完成':'#2e7d32','已取消':'#c62828'};
+const PAY_COLOR={'未付款':'#c62828','已付款':'#2e7d32'};
+window.queryOrders=async function(){
+  const email=document.getElementById('query-email').value.trim().toLowerCase();
+  if(!email){alert('請輸入 Email');return;}
+  const result=document.getElementById('orders-result');
+  result.innerHTML='<div style="text-align:center;padding:2rem;color:var(--text2);">查詢中…</div>';
+  try{
+    const q=query(collection(db,'orders'),where('email','==',email),orderBy('createdAt','desc'));
+    const snap=await new Promise(resolve=>{const u=onSnapshot(q,s=>{u();resolve(s);});});
+    if(snap.empty){result.innerHTML='<div style="text-align:center;padding:2rem;color:var(--text2);">找不到訂單，請確認 Email 是否正確</div>';return;}
+    result.innerHTML=snap.docs.map(d=>{
+      const o=d.data();
+      const date=o.createdAt?new Date(o.createdAt.seconds*1000).toLocaleDateString('zh-TW'):'—';
+      const sc=STATUS_COLOR[o.status]||'#666';
+      const pc=PAY_COLOR[o.payStatus]||'#666';
+      return `<div style="background:#fff;border-radius:16px;border:1px solid var(--border);padding:1.2rem;margin-bottom:1rem;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.8rem;">
+          <div style="font-size:.88rem;font-weight:500;color:var(--text);">${o.orderId}</div>
+          <div style="display:flex;gap:.4rem;">
+            <span style="background:${sc}22;color:${sc};font-size:.72rem;border-radius:8px;padding:.15rem .6rem;">${o.status}</span>
+            <span style="background:${pc}22;color:${pc};font-size:.72rem;border-radius:8px;padding:.15rem .6rem;">${o.payStatus}</span>
+          </div>
+        </div>
+        <div style="font-size:.78rem;color:var(--text2);margin-bottom:.8rem;">訂購日期：${date}</div>
+        ${(o.items||[]).map(item=>`
+          <div style="display:flex;align-items:center;gap:.7rem;padding:.5rem 0;border-top:1px solid var(--border);">
+            <div style="width:40px;height:40px;border-radius:8px;background:linear-gradient(135deg,var(--pink),var(--pink2));overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;">
+              ${item.img?`<img src="${item.img}" style="width:100%;height:100%;object-fit:cover;">`:'🌸'}
+            </div>
+            <div style="flex:1;font-size:.83rem;">${item.name}</div>
+            <div style="font-size:.8rem;color:var(--text2);">x${item.qty}</div>
+            <div style="font-size:.85rem;color:var(--pink4);font-weight:500;">NT$${item.price*item.qty}</div>
+          </div>`).join('')}
+        <div style="display:flex;justify-content:space-between;margin-top:.8rem;padding-top:.6rem;border-top:1px solid var(--border);">
+          <span style="font-size:.83rem;color:var(--text2);">運送：${o.shippingLabel||'—'}</span>
+          <span style="font-size:.9rem;font-weight:500;color:var(--pink4);">總計 NT$${o.total}</span>
+        </div>
+      </div>`;
+    }).join('');
+  }catch(e){result.innerHTML='<div style="text-align:center;padding:2rem;color:#c62828;">查詢失敗，請稍後再試</div>';}
 };
 window.sendContactEmail=async function(){
   const name=document.getElementById('contact-name').value.trim();

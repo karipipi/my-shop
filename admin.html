@@ -143,6 +143,7 @@ tr:hover td{background:#fdf5f8;}
   <nav class="sidebar-menu">
     <button class="menu-item active" onclick="switchPanel('dashboard',this)"><span class="icon">📊</span> 總覽</button>
     <button class="menu-item" onclick="switchPanel('products',this)"><span class="icon">🛍</span> 商品管理</button>
+    <button class="menu-item" onclick="switchPanel('orders',this)"><span class="icon">📋</span> 訂單管理</button>
     <button class="menu-item" onclick="switchPanel('featured',this)"><span class="icon">⭐</span> 主打商品</button>
   </nav>
   <div class="sidebar-footer">
@@ -186,6 +187,48 @@ tr:hover td{background:#fdf5f8;}
           <tbody id="product-table"></tbody>
         </table>
         <div id="product-empty" class="empty" style="display:none"><div class="e-icon">🌸</div>目前沒有商品</div>
+      </div>
+    </div>
+
+    <!-- 訂單管理 -->
+    <div class="panel" id="panel-orders">
+      <div class="table-wrap">
+        <div class="table-header">
+          <h3>訂單管理 (<span id="order-count">0</span>)</h3>
+          <div style="display:flex;gap:.6rem;align-items:center;">
+            <select id="order-filter-status" onchange="renderOrders()" style="border:1.5px solid var(--border);border-radius:8px;padding:.35rem .7rem;font-size:.82rem;font-family:inherit;background:var(--cream);outline:none;">
+              <option value="">全部狀態</option>
+              <option value="待確認">待確認</option>
+              <option value="處理中">處理中</option>
+              <option value="已出貨">已出貨</option>
+              <option value="已完成">已完成</option>
+              <option value="已取消">已取消</option>
+            </select>
+          </div>
+        </div>
+        <table>
+          <thead><tr><th>訂單編號</th><th>客人</th><th>商品</th><th>金額</th><th>付款</th><th>狀態</th><th>操作</th></tr></thead>
+          <tbody id="order-table"></tbody>
+        </table>
+        <div id="order-empty" class="empty" style="display:none"><div class="e-icon">📋</div>目前沒有訂單</div>
+      </div>
+    </div>
+
+    <!-- 訂單詳情 Modal -->
+    <div class="confirm-modal" id="order-detail-modal" style="z-index:400;">
+      <div class="confirm-box" style="max-width:520px;text-align:left;">
+        <h3 style="margin-bottom:1rem;" id="od-modal-id"></h3>
+        <div id="od-modal-body" style="font-size:.85rem;color:var(--text2);line-height:2;max-height:60vh;overflow-y:auto;"></div>
+        <div style="display:flex;gap:.6rem;margin-top:1.2rem;flex-wrap:wrap;">
+          <select id="od-status-select" style="border:1.5px solid var(--border);border-radius:8px;padding:.4rem .7rem;font-size:.83rem;font-family:inherit;flex:1;">
+            <option>待確認</option><option>處理中</option><option>已出貨</option><option>已完成</option><option>已取消</option>
+          </select>
+          <select id="od-pay-select" style="border:1.5px solid var(--border);border-radius:8px;padding:.4rem .7rem;font-size:.83rem;font-family:inherit;flex:1;">
+            <option>未付款</option><option>已付款</option>
+          </select>
+          <button class="btn btn-pink" onclick="updateOrderStatus()">更新狀態</button>
+          <button class="btn btn-outline" onclick="closeOrderDetail()">關閉</button>
+        </div>
       </div>
     </div>
 
@@ -317,7 +360,7 @@ tr:hover td{background:#fdf5f8;}
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
-import { getFirestore, collection, addDoc, setDoc, deleteDoc, doc, onSnapshot, orderBy, query, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+import { getFirestore, collection, addDoc, setDoc, deleteDoc, doc, onSnapshot, orderBy, query, serverTimestamp, where, updateDoc } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js";
 
 const firebaseConfig = {
@@ -366,6 +409,12 @@ function initData(){
     renderDashboard();
     renderTable();
     renderFeatured();
+  });
+  const oq = query(collection(db,'orders'), orderBy('createdAt','desc'));
+  onSnapshot(oq, snapshot => {
+    _orders = snapshot.docs.map(d => ({_docId: d.id, ...d.data()}));
+    renderOrders();
+    renderDashboard();
   });
 }
 
@@ -436,7 +485,9 @@ const CAT_LABEL = new Proxy({}, {
   get(_, cat){ return getCatLabel(cat); }
 });
 let _products = [];
+let _orders = [];
 function getProducts(){ return _products; }
+function getOrders(){ return _orders; }
 
 async function saveProduct_db(product, id){
   if(id){ await setDoc(doc(db,'products',id), product); }
@@ -444,11 +495,12 @@ async function saveProduct_db(product, id){
 }
 async function deleteProduct_db(id){ await deleteDoc(doc(db,'products',id)); }
 async function updateFeatured_db(id, featured){ await setDoc(doc(db,'products',id), {featured}, {merge:true}); }
+async function updateOrder_db(docId, status, payStatus){ await updateDoc(doc(db,'orders',docId), {status, payStatus}); }
 
 // ════════════════════════════════════════
 // 面板切換
 // ════════════════════════════════════════
-const panelTitles={dashboard:'總覽',products:'商品管理',featured:'主打商品設定'};
+const panelTitles={dashboard:'總覽',products:'商品管理',orders:'訂單管理',featured:'主打商品設定'};
 function switchPanel(id,btn){
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.menu-item').forEach(b=>b.classList.remove('active'));
@@ -465,13 +517,15 @@ function switchPanel(id,btn){
 // ════════════════════════════════════════
 function renderDashboard(){
   const products=getProducts();
+  const orders=getOrders();
   const featured=products.filter(p=>p.featured).length;
   const cats=[...new Set(products.map(p=>p.cat))].length;
+  const pendingOrders=orders.filter(o=>o.status==='待確認').length;
   document.getElementById('stat-grid').innerHTML=`
     <div class="stat-card"><div class="stat-icon" style="font-size:1rem;font-weight:600;color:var(--pink3);">商品</div><div class="stat-value">${products.length}</div><div class="stat-label">商品總數</div></div>
+    <div class="stat-card"><div class="stat-icon" style="font-size:1rem;font-weight:600;color:var(--pink3);">訂單</div><div class="stat-value">${orders.length}</div><div class="stat-label">訂單總數</div></div>
+    <div class="stat-card"><div class="stat-icon" style="font-size:1rem;font-weight:600;color:${pendingOrders>0?'#e65100':'var(--pink3)'};">待確認</div><div class="stat-value" style="color:${pendingOrders>0?'#e65100':'var(--pink4)'};">${pendingOrders}</div><div class="stat-label">待處理訂單</div></div>
     <div class="stat-card"><div class="stat-icon" style="font-size:1rem;font-weight:600;color:var(--pink3);">主打</div><div class="stat-value">${featured}</div><div class="stat-label">主打商品</div></div>
-    <div class="stat-card"><div class="stat-icon" style="font-size:1rem;font-weight:600;color:var(--pink3);">分類</div><div class="stat-value">${cats}</div><div class="stat-label">商品類別</div></div>
-    <div class="stat-card"><div class="stat-icon" style="font-size:1rem;font-weight:600;color:var(--pink3);">圖片</div><div class="stat-value">${products.filter(p=>p.imgs&&p.imgs.length).length}</div><div class="stat-label">已上傳圖片</div></div>
   `;
   document.getElementById('dash-table').innerHTML=products.slice(0,6).map(p=>`
     <tr>
@@ -480,6 +534,84 @@ function renderDashboard(){
       <td>NT$${p.price}${p.oldPrice?` <s style="color:var(--text2);font-size:.75rem;">NT$${p.oldPrice}</s>`:''}</td>
       <td>${p.featured?'✓':'—'}</td>
     </tr>`).join('');
+}
+
+// ════════════════════════════════════════
+// 訂單管理
+// ════════════════════════════════════════
+const ORDER_STATUS_COLOR={'待確認':'badge-sale','處理中':'badge-blind','已出貨':'badge-acc','已完成':'badge-dress','已取消':'badge-sale'};
+let currentOrderDocId='';
+
+function renderOrders(){
+  const orders=getOrders();
+  const filterStatus=document.getElementById('order-filter-status')?.value||'';
+  const filtered=filterStatus?orders.filter(o=>o.status===filterStatus):orders;
+  document.getElementById('order-count').textContent=orders.length;
+  const tbody=document.getElementById('order-table');
+  const empty=document.getElementById('order-empty');
+  if(!filtered.length){tbody.innerHTML='';empty.style.display='block';return;}
+  empty.style.display='none';
+  tbody.innerHTML=filtered.map(o=>{
+    const date=o.createdAt?new Date(o.createdAt.seconds*1000).toLocaleDateString('zh-TW'):'—';
+    const payColor=o.payStatus==='已付款'?'#2e7d32':'#c62828';
+    return `<tr>
+      <td style="font-size:.78rem;"><div style="font-weight:500;">${o.orderId}</div><div style="color:var(--text2);font-size:.72rem;">${date}</div></td>
+      <td style="font-size:.82rem;"><div>${o.name}</div><div style="color:var(--text2);font-size:.72rem;">${o.phone}</div></td>
+      <td style="font-size:.78rem;max-width:150px;">${(o.items||[]).map(i=>`${i.name} x${i.qty}`).join('、')}</td>
+      <td style="font-size:.85rem;color:var(--pink4);font-weight:500;">NT$${o.total}</td>
+      <td><span style="font-size:.72rem;color:${payColor};background:${payColor}22;border-radius:6px;padding:.15rem .5rem;">${o.payStatus}</span></td>
+      <td><span class="badge ${ORDER_STATUS_COLOR[o.status]||'badge-dress'}">${o.status}</span></td>
+      <td><button class="btn btn-outline btn-sm" onclick="openOrderDetail('${o._docId}')">查看</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function openOrderDetail(docId){
+  const o=getOrders().find(x=>x._docId===docId);
+  if(!o) return;
+  currentOrderDocId=docId;
+  document.getElementById('od-modal-id').textContent=o.orderId;
+  const date=o.createdAt?new Date(o.createdAt.seconds*1000).toLocaleString('zh-TW'):'—';
+  document.getElementById('od-modal-body').innerHTML=`
+    <div style="margin-bottom:.8rem;padding-bottom:.8rem;border-bottom:1px solid var(--border);">
+      <div style="font-weight:500;color:var(--text);margin-bottom:.4rem;">🛍 訂購商品</div>
+      ${(o.items||[]).map(i=>`<div style="display:flex;justify-content:space-between;padding:.3rem 0;">
+        <span>${i.name} x${i.qty}</span><span style="color:var(--pink4);">NT$${i.price*i.qty}</span>
+      </div>`).join('')}
+      <div style="display:flex;justify-content:space-between;margin-top:.4rem;padding-top:.4rem;border-top:1px solid var(--border);">
+        <span>運費</span><span>${o.shipFee===0?'免運':'NT$'+o.shipFee}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-weight:500;color:var(--pink4);">
+        <span>總計</span><span>NT$${o.total}</span>
+      </div>
+    </div>
+    <div style="margin-bottom:.8rem;padding-bottom:.8rem;border-bottom:1px solid var(--border);">
+      <div style="font-weight:500;color:var(--text);margin-bottom:.4rem;">📦 收件資訊</div>
+      收件人：${o.name}<br>電話：${o.phone}<br>Email：${o.email}<br>
+      運送：${o.shippingLabel}<br>
+      ${o.address?`地址：${o.address}<br>`:''}
+      ${o.store?`門市：${o.store}<br>`:''}
+      ${o.note?`備註：${o.note}<br>`:''}
+    </div>
+    <div>
+      <div style="font-weight:500;color:var(--text);margin-bottom:.4rem;">💳 付款資訊</div>
+      付款方式：${o.paymentLabel}<br>訂購時間：${date}
+    </div>`;
+  document.getElementById('od-status-select').value=o.status;
+  document.getElementById('od-pay-select').value=o.payStatus;
+  document.getElementById('order-detail-modal').classList.add('open');
+}
+
+function closeOrderDetail(){document.getElementById('order-detail-modal').classList.remove('open');}
+
+async function updateOrderStatus(){
+  const status=document.getElementById('od-status-select').value;
+  const payStatus=document.getElementById('od-pay-select').value;
+  try{
+    await updateOrder_db(currentOrderDocId, status, payStatus);
+    closeOrderDetail();
+    toast('✓ 訂單狀態已更新');
+  }catch(e){toast('❌ 更新失敗','error');}
 }
 
 // ════════════════════════════════════════
@@ -725,6 +857,10 @@ window.handleImgUpload=handleImgUpload;
 window.removeImg=removeImg;
 window.renderTable=renderTable;
 window.handleCatChange=handleCatChange;
+window.renderOrders=renderOrders;
+window.openOrderDetail=openOrderDetail;
+window.closeOrderDetail=closeOrderDetail;
+window.updateOrderStatus=updateOrderStatus;
 </script>
 </body>
 </html>
