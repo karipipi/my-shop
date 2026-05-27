@@ -12,6 +12,7 @@
   --cream:#fdf8f5;--text:#3a2a30;--text2:#7a5a65;--white:#ffffff;--border:#edd5df;
 }
 body{font-family:'Zen Maru Gothic',sans-serif;background:var(--cream)url('sakuracat.png') center/60% no-repeat;}
+nav{background:#ffffff !important;opacity:1 !important;}
 body::before{content:'';position:fixed;inset:0;background:rgba(255,255,255,0.88);z-index:0;pointer-events:none;}  .page{position:relative;z-index:1;}
 .nav-inner{max-width:1100px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:64px;}
 .logo{font-family:'Noto Serif TC',serif;font-size:1.3rem;font-weight:500;color:var(--pink4);letter-spacing:.08em;display:flex;align-items:center;gap:.5rem;}
@@ -80,7 +81,7 @@ body::before{content:'';position:fixed;inset:0;background:rgba(255,255,255,0.88)
 .checkout-btn:hover{background:#9a4a65;}
 .toast{position:fixed;bottom:2rem;right:2rem;background:var(--pink4);color:var(--white);padding:.7rem 1.4rem;border-radius:12px;font-size:.85rem;transform:translateY(60px);opacity:0;transition:all .35s;z-index:999;}
 .toast.show{transform:translateY(0);opacity:1;}
-.banner{background:var(--pink4);color:var(--white);text-align:center;padding:.5rem;font-size:.8rem;letter-spacing:.06em;}
+.banner{background:#b85c78;color:#ffffff;text-align:center;padding:.5rem;opacity:1;font-size:.8rem;letter-spacing:.06em;}
 @media(max-width:640px){
   .checkout-layout{grid-template-columns:1fr;}
   .hero{padding:2.5rem 1.5rem;}
