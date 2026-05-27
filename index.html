@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>櫻花喵小舖</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@300;400;500&family=Zen+Maru+Gothic:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script>emailjs.init('i959u2b6f_PFAxYur');</script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
 :root{
@@ -487,9 +489,25 @@ window.sendContactEmail=function(){
   const type=document.getElementById('contact-type').value;
   const msg=document.getElementById('contact-msg').value.trim();
   if(!name||!msg){alert('請填寫姓名和訊息內容');return;}
-  const subject=encodeURIComponent(`【櫻花喵小舖】${type} - ${name}`);
-  const body=encodeURIComponent(`姓名：${name}\n聯絡方式：${contact}\n詢問類型：${type}\n\n訊息內容：\n${msg}`);
-  window.location.href=`mailto:amnesia70504@gmail.com?subject=${subject}&body=${body}`;
+  const btn=document.querySelector('#contact .btn-primary');
+  btn.textContent='寄送中…';
+  btn.disabled=true;
+  emailjs.send('service_duhxyd7','5cjok5q',{
+    from_name: name,
+    contact: contact,
+    type: type,
+    message: msg,
+  }).then(()=>{
+    btn.textContent='✓ 已送出！';
+    btn.style.background='#2e7d32';
+    document.getElementById('contact-name').value='';
+    document.getElementById('contact-contact').value='';
+    document.getElementById('contact-msg').value='';
+    setTimeout(()=>{btn.textContent='送出訊息 →';btn.style.background='';btn.disabled=false;},3000);
+  }).catch(()=>{
+    btn.textContent='送出失敗，請再試一次';
+    btn.disabled=false;
+  });
 };
 </script>
 </body>
