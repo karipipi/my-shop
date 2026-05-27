@@ -208,6 +208,39 @@ nav{background:#ffffff;border-bottom:1.5px solid var(--border);position:sticky;t
   </div>
 </div>
 
+<!-- 客人訂單詳情 Panel -->
+<div class="modal-backdrop" id="order-panel-backdrop" onclick="closeOrderPanel()"></div>
+<div class="modal-panel" id="order-panel">
+  <div class="modal-close">
+    <span class="modal-breadcrumb">我的訂單 › <span id="op-order-id"></span></span>
+    <button class="modal-close-btn" onclick="closeOrderPanel()">✕</button>
+  </div>
+  <div class="modal-body">
+    <!-- 狀態 -->
+    <div id="op-status-bar" style="border-radius:12px;padding:1rem 1.2rem;margin-bottom:1.2rem;text-align:center;">
+      <div id="op-status-text" style="font-size:1rem;font-weight:500;"></div>
+      <div id="op-pay-text" style="font-size:.82rem;margin-top:.3rem;opacity:.85;"></div>
+    </div>
+    <!-- 商品 -->
+    <div style="font-size:.88rem;font-weight:500;color:var(--pink4);margin-bottom:.8rem;">🛍 訂購商品</div>
+    <div id="op-items"></div>
+    <div style="background:var(--cream);border-radius:10px;padding:.8rem 1rem;margin-top:.8rem;">
+      <div style="display:flex;justify-content:space-between;font-size:.83rem;color:var(--text2);margin-bottom:.3rem;"><span>小計</span><span id="op-subtotal"></span></div>
+      <div style="display:flex;justify-content:space-between;font-size:.83rem;color:var(--text2);margin-bottom:.3rem;"><span>運費</span><span id="op-shipfee"></span></div>
+      <div style="display:flex;justify-content:space-between;font-size:.95rem;font-weight:500;color:var(--pink4);padding-top:.5rem;border-top:1px solid var(--border);"><span>總計</span><span id="op-total"></span></div>
+    </div>
+    <hr class="modal-divider">
+    <!-- 收件資訊 -->
+    <div style="font-size:.88rem;font-weight:500;color:var(--pink4);margin-bottom:.8rem;">📦 收件資訊</div>
+    <div id="op-info" style="background:var(--cream);border-radius:10px;padding:.8rem 1rem;font-size:.85rem;color:var(--text2);line-height:2.2;"></div>
+    <hr class="modal-divider">
+    <!-- 付款資訊 -->
+    <div style="font-size:.88rem;font-weight:500;color:var(--pink4);margin-bottom:.8rem;">💳 付款資訊</div>
+    <div id="op-payment" style="background:var(--cream);border-radius:10px;padding:.8rem 1rem;font-size:.85rem;color:var(--text2);line-height:2.2;"></div>
+    <div style="font-size:.75rem;color:var(--text2);text-align:center;margin-top:1rem;" id="op-date"></div>
+  </div>
+</div>
+
 <!-- 手機選單 -->
 <div class="mobile-menu" id="mobile-menu">
   <button class="mobile-menu-close" onclick="toggleMobileMenu()">✕</button>
@@ -636,6 +669,13 @@ window.setGallery=setGallery;
 window.addToCart=addToCart;
 window.changeQty=changeQty;
 window.queryOrders=window.queryOrders;
+window.openOrderPanel=window.openOrderPanel;
+window.closeOrderPanel=window.closeOrderPanel;
+
+// Enter 鍵查詢
+document.getElementById('query-email')?.addEventListener('keydown',e=>{
+  if(e.key==='Enter') window.queryOrders();
+});
 window.toggleMobileMenu=function(){
   document.getElementById('mobile-menu').classList.toggle('open');
 };
@@ -710,45 +750,104 @@ window.submitOrder=async function(){
 
 const STATUS_COLOR={'待確認':'#e65100','處理中':'#1565c0','已出貨':'#2e7d32','已完成':'#2e7d32','已取消':'#c62828'};
 const PAY_COLOR={'未付款':'#c62828','已付款':'#2e7d32'};
+let _cachedOrders=[];
+
 window.queryOrders=async function(){
   const email=document.getElementById('query-email').value.trim().toLowerCase();
   if(!email){alert('請輸入 Email');return;}
   const result=document.getElementById('orders-result');
   result.innerHTML='<div style="text-align:center;padding:2rem;color:var(--text2);">查詢中…</div>';
   try{
+    const {getDocs}=await import("https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js");
     const q=query(collection(db,'orders'),where('email','==',email),orderBy('createdAt','desc'));
-    const snap=await new Promise(resolve=>{const u=onSnapshot(q,s=>{u();resolve(s);});});
+    const snap=await getDocs(q);
     if(snap.empty){result.innerHTML='<div style="text-align:center;padding:2rem;color:var(--text2);">找不到訂單，請確認 Email 是否正確</div>';return;}
-    result.innerHTML=snap.docs.map(d=>{
-      const o=d.data();
-      const date=o.createdAt?new Date(o.createdAt.seconds*1000).toLocaleDateString('zh-TW'):'—';
-      const sc=STATUS_COLOR[o.status]||'#666';
-      const pc=PAY_COLOR[o.payStatus]||'#666';
-      return `<div style="background:#fff;border-radius:16px;border:1px solid var(--border);padding:1.2rem;margin-bottom:1rem;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.8rem;">
-          <div style="font-size:.88rem;font-weight:500;color:var(--text);">${o.orderId}</div>
-          <div style="display:flex;gap:.4rem;">
-            <span style="background:${sc}22;color:${sc};font-size:.72rem;border-radius:8px;padding:.15rem .6rem;">${o.status}</span>
-            <span style="background:${pc}22;color:${pc};font-size:.72rem;border-radius:8px;padding:.15rem .6rem;">${o.payStatus}</span>
+    _cachedOrders=snap.docs.map(d=>({_docId:d.id,...d.data()}));
+    renderOrderCards(result);
+  }catch(e){console.error(e);result.innerHTML='<div style="text-align:center;padding:2rem;color:#c62828;">查詢失敗，請稍後再試</div>';}
+};
+
+function renderOrderCards(result){
+  result.innerHTML=_cachedOrders.map((o,idx)=>{
+    const date=o.createdAt?new Date(o.createdAt.seconds*1000).toLocaleDateString('zh-TW'):'—';
+    const sc=STATUS_COLOR[o.status]||'#666';
+    const pc=PAY_COLOR[o.payStatus]||'#666';
+    return `<div style="background:#fff;border-radius:16px;border:1px solid var(--border);padding:1.2rem;margin-bottom:1rem;cursor:pointer;transition:box-shadow .2s;" onclick="openOrderPanel(${idx})" onmouseover="this.style.boxShadow='0 4px 16px rgba(180,100,130,.12)'" onmouseout="this.style.boxShadow='none'">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.8rem;">
+        <div style="font-size:.88rem;font-weight:500;color:var(--text);">${o.orderId}</div>
+        <div style="display:flex;gap:.4rem;">
+          <span style="background:${sc}22;color:${sc};font-size:.72rem;border-radius:8px;padding:.15rem .6rem;">${o.status}</span>
+          <span style="background:${pc}22;color:${pc};font-size:.72rem;border-radius:8px;padding:.15rem .6rem;">${o.payStatus}</span>
+        </div>
+      </div>
+      <div style="font-size:.78rem;color:var(--text2);margin-bottom:.8rem;">訂購日期：${date}　點擊查看詳情 →</div>
+      ${(o.items||[]).slice(0,2).map(item=>`
+        <div style="display:flex;align-items:center;gap:.7rem;padding:.4rem 0;border-top:1px solid var(--border);">
+          <div style="width:40px;height:40px;border-radius:8px;background:linear-gradient(135deg,var(--pink),var(--pink2));overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;">
+            ${item.img?`<img src="${item.img}" style="width:100%;height:100%;object-fit:cover;">`:'🌸'}
           </div>
-        </div>
-        <div style="font-size:.78rem;color:var(--text2);margin-bottom:.8rem;">訂購日期：${date}</div>
-        ${(o.items||[]).map(item=>`
-          <div style="display:flex;align-items:center;gap:.7rem;padding:.5rem 0;border-top:1px solid var(--border);">
-            <div style="width:40px;height:40px;border-radius:8px;background:linear-gradient(135deg,var(--pink),var(--pink2));overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;">
-              ${item.img?`<img src="${item.img}" style="width:100%;height:100%;object-fit:cover;">`:'🌸'}
-            </div>
-            <div style="flex:1;font-size:.83rem;">${item.name}</div>
-            <div style="font-size:.8rem;color:var(--text2);">x${item.qty}</div>
-            <div style="font-size:.85rem;color:var(--pink4);font-weight:500;">NT$${item.price*item.qty}</div>
-          </div>`).join('')}
-        <div style="display:flex;justify-content:space-between;margin-top:.8rem;padding-top:.6rem;border-top:1px solid var(--border);">
-          <span style="font-size:.83rem;color:var(--text2);">運送：${o.shippingLabel||'—'}</span>
-          <span style="font-size:.9rem;font-weight:500;color:var(--pink4);">總計 NT$${o.total}</span>
-        </div>
-      </div>`;
-    }).join('');
-  }catch(e){result.innerHTML='<div style="text-align:center;padding:2rem;color:#c62828;">查詢失敗，請稍後再試</div>';}
+          <div style="flex:1;font-size:.82rem;">${item.name}</div>
+          <div style="font-size:.8rem;color:var(--text2);">x${item.qty}</div>
+          <div style="font-size:.85rem;color:var(--pink4);font-weight:500;">NT$${item.price*item.qty}</div>
+        </div>`).join('')}
+      ${o.items&&o.items.length>2?`<div style="font-size:.75rem;color:var(--text2);text-align:center;padding-top:.4rem;">還有 ${o.items.length-2} 件商品…</div>`:''}
+      <div style="display:flex;justify-content:space-between;margin-top:.8rem;padding-top:.6rem;border-top:1px solid var(--border);">
+        <span style="font-size:.83rem;color:var(--text2);">運送：${o.shippingLabel||'—'}</span>
+        <span style="font-size:.9rem;font-weight:500;color:var(--pink4);">總計 NT$${o.total}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+window.openOrderPanel=function(idx){
+  const o=_cachedOrders[idx];
+  if(!o) return;
+  const sc=STATUS_COLOR[o.status]||'#666';
+  const pc=PAY_COLOR[o.payStatus]||'#666';
+  document.getElementById('op-order-id').textContent=o.orderId;
+  const bar=document.getElementById('op-status-bar');
+  bar.style.background=sc+'22';
+  bar.style.border=`1.5px solid ${sc}44`;
+  document.getElementById('op-status-text').style.color=sc;
+  document.getElementById('op-status-text').textContent=`訂單狀態：${o.status}`;
+  document.getElementById('op-pay-text').style.color=pc;
+  document.getElementById('op-pay-text').textContent=`付款狀態：${o.payStatus}`;
+  // 商品
+  document.getElementById('op-items').innerHTML=(o.items||[]).map(item=>`
+    <div style="display:flex;align-items:center;gap:.8rem;padding:.7rem 0;border-bottom:1px solid var(--border);">
+      <div style="width:64px;height:64px;border-radius:10px;background:linear-gradient(135deg,var(--pink),var(--pink2));overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1.8rem;">
+        ${item.img?`<img src="${item.img}" style="width:100%;height:100%;object-fit:cover;">`:'🌸'}
+      </div>
+      <div style="flex:1;">
+        <div style="font-size:.88rem;color:var(--text);margin-bottom:.2rem;">${item.name}</div>
+        <div style="font-size:.8rem;color:var(--text2);">單價 NT$${item.price} × ${item.qty}</div>
+      </div>
+      <div style="font-size:.95rem;color:var(--pink4);font-weight:500;">NT$${item.price*item.qty}</div>
+    </div>`).join('');
+  document.getElementById('op-subtotal').textContent=`NT$${o.subtotal}`;
+  document.getElementById('op-shipfee').textContent=o.shipFee===0?'免運':`NT$${o.shipFee}`;
+  document.getElementById('op-total').textContent=`NT$${o.total}`;
+  // 收件
+  let info=`收件人：${o.name}<br>電話：${o.phone}<br>Email：${o.email}<br>運送方式：${o.shippingLabel}`;
+  if(o.address) info+=`<br>地址：${o.address}`;
+  if(o.store) info+=`<br>門市：${o.store}`;
+  if(o.note) info+=`<br>備註：${o.note}`;
+  document.getElementById('op-info').innerHTML=info;
+  // 付款
+  let pay=`付款方式：${o.paymentLabel}`;
+  if(o.payment==='atm') pay+=`<br>銀行：玉山銀行 808<br>帳號：1234-567-890123<br><span style="color:var(--pink4);font-size:.8rem;">※ 請於 3 天內完成匯款</span>`;
+  if(o.payment==='cod') pay+=`<br><span style="color:var(--pink4);font-size:.8rem;">※ 商品送達時付款給配送員</span>`;
+  document.getElementById('op-payment').innerHTML=pay;
+  const date=o.createdAt?new Date(o.createdAt.seconds*1000).toLocaleString('zh-TW'):'—';
+  document.getElementById('op-date').textContent=`訂購時間：${date}`;
+  document.getElementById('order-panel-backdrop').classList.add('open');
+  document.getElementById('order-panel').classList.add('open');
+  document.body.style.overflow='hidden';
+};
+window.closeOrderPanel=function(){
+  document.getElementById('order-panel-backdrop').classList.remove('open');
+  document.getElementById('order-panel').classList.remove('open');
+  document.body.style.overflow='';
 };
 window.sendContactEmail=async function(){
   const name=document.getElementById('contact-name').value.trim();
