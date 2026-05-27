@@ -39,7 +39,8 @@ body{font-family:'Zen Maru Gothic',sans-serif;background:#f5f0f3;color:var(--tex
 
 /* ── Cards ── */
 .stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:2rem;}
-.stat-card{background:#fff;border-radius:14px;border:1px solid var(--border);padding:1.2rem 1.4rem;}
+.stat-card{background:#fff;border-radius:14px;border:1px solid var(--border);padding:1.2rem 1.4rem;cursor:pointer;transition:box-shadow .2s;}
+.stat-card:hover{box-shadow:0 4px 16px rgba(180,100,130,.12);}
 .stat-icon{font-size:1.5rem;margin-bottom:.5rem;}
 .stat-value{font-size:1.6rem;font-weight:600;color:var(--pink4);font-family:'Noto Serif TC',serif;}
 .stat-label{font-size:.78rem;color:var(--text2);margin-top:.15rem;}
@@ -522,10 +523,10 @@ function renderDashboard(){
   const cats=[...new Set(products.map(p=>p.cat))].length;
   const pendingOrders=orders.filter(o=>o.status==='待確認').length;
   document.getElementById('stat-grid').innerHTML=`
-    <div class="stat-card"><div class="stat-icon" style="font-size:1rem;font-weight:600;color:var(--pink3);">商品</div><div class="stat-value">${products.length}</div><div class="stat-label">商品總數</div></div>
-    <div class="stat-card"><div class="stat-icon" style="font-size:1rem;font-weight:600;color:var(--pink3);">訂單</div><div class="stat-value">${orders.length}</div><div class="stat-label">訂單總數</div></div>
-    <div class="stat-card"><div class="stat-icon" style="font-size:1rem;font-weight:600;color:${pendingOrders>0?'#e65100':'var(--pink3)'};">待確認</div><div class="stat-value" style="color:${pendingOrders>0?'#e65100':'var(--pink4)'};">${pendingOrders}</div><div class="stat-label">待處理訂單</div></div>
-    <div class="stat-card"><div class="stat-icon" style="font-size:1rem;font-weight:600;color:var(--pink3);">主打</div><div class="stat-value">${featured}</div><div class="stat-label">主打商品</div></div>
+    <div class="stat-card" onclick="switchPanel('products',document.querySelector('.menu-item:nth-child(2)'))"><div class="stat-icon" style="font-size:1rem;font-weight:600;color:var(--pink3);">商品</div><div class="stat-value">${products.length}</div><div class="stat-label">商品總數</div></div>
+    <div class="stat-card" onclick="switchPanel('orders',document.querySelector('.menu-item:nth-child(3)'))"><div class="stat-icon" style="font-size:1rem;font-weight:600;color:var(--pink3);">訂單</div><div class="stat-value">${orders.length}</div><div class="stat-label">訂單總數</div></div>
+    <div class="stat-card" onclick="switchPanel('orders',document.querySelector('.menu-item:nth-child(3)'))"><div class="stat-icon" style="font-size:1rem;font-weight:600;color:${pendingOrders>0?'#e65100':'var(--pink3)'};">待確認</div><div class="stat-value" style="color:${pendingOrders>0?'#e65100':'var(--pink4)'};">${pendingOrders}</div><div class="stat-label">待處理訂單</div></div>
+    <div class="stat-card" onclick="switchPanel('featured',document.querySelector('.menu-item:nth-child(4)'))"><div class="stat-icon" style="font-size:1rem;font-weight:600;color:var(--pink3);">主打</div><div class="stat-value">${featured}</div><div class="stat-label">主打商品</div></div>
   `;
   document.getElementById('dash-table').innerHTML=products.slice(0,6).map(p=>`
     <tr>
