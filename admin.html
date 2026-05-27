@@ -155,6 +155,8 @@ tr:hover td{background:#fdf5f8;}
   <div class="topbar">
     <div class="topbar-title" id="topbar-title">總覽</div>
     <div class="topbar-actions">
+      <span id="admin-user" style="font-size:.78rem;color:var(--text2);"></span>
+      <button class="btn btn-outline btn-sm" id="logout-btn">登出</button>
       <button class="btn btn-pink" onclick="openDrawer()">＋ 新增商品</button>
     </div>
   </div>
@@ -298,11 +300,26 @@ tr:hover td{background:#fdf5f8;}
   </div>
 </div>
 
+<!-- 登入畫面 -->
+<div id="login-screen" style="position:fixed;inset:0;background:var(--cream);z-index:999;display:flex;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:20px;border:1px solid var(--border);padding:2.5rem 2rem;text-align:center;max-width:360px;width:90%;">
+    <div style="font-size:2.5rem;margin-bottom:.8rem;">🐱</div>
+    <div style="font-family:'Noto Serif TC',serif;font-size:1.2rem;color:var(--pink4);margin-bottom:.4rem;">櫻花喵後台管理</div>
+    <div style="font-size:.83rem;color:var(--text2);margin-bottom:1.8rem;">請使用管理員帳號登入</div>
+    <button id="login-btn" style="display:flex;align-items:center;gap:.8rem;background:#fff;border:1.5px solid var(--border);border-radius:12px;padding:.75rem 1.5rem;font-size:.9rem;cursor:pointer;font-family:inherit;color:var(--text);margin:0 auto;transition:box-shadow .2s;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.1)'" onmouseout="this.style.boxShadow='none'">
+      <img src="https://www.google.com/favicon.ico" width="18" height="18">
+      使用 Google 帳號登入
+    </button>
+    <div id="login-error" style="color:#c62828;font-size:.78rem;margin-top:1rem;display:none;">此帳號沒有管理權限</div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
-import { getFirestore, collection, getDocs, addDoc, setDoc, deleteDoc, doc, onSnapshot, orderBy, query, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+import { getFirestore, collection, addDoc, setDoc, deleteDoc, doc, onSnapshot, orderBy, query, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBo8hfvLBQ4lB5NgP_wbUP44n6U0jdC4lE",
@@ -315,38 +332,62 @@ const firebaseConfig = {
 };
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const auth = getAuth(app);
+const ADMIN_EMAIL = "andy3031130311@gmail.com";
 
 // ════════════════════════════════════════
-// 資料（從 Firestore 即時同步）
+// Google 登入
+// ════════════════════════════════════════
+document.getElementById('login-btn').onclick = async () => {
+  try{
+    const provider = new GoogleAuthProvider();
+    const result = await signInWithPopup(auth, provider);
+    if(result.user.email !== ADMIN_EMAIL){
+      document.getElementById('login-error').style.display='block';
+      await auth.signOut();
+    }
+  }catch(e){ console.error(e); }
+};
+
+onAuthStateChanged(auth, user => {
+  if(user && user.email === ADMIN_EMAIL){
+    document.getElementById('login-screen').style.display='none';
+    // 顯示使用者名稱在 topbar
+    document.getElementById('admin-user').textContent = user.displayName || user.email;
+    initData();
+  } else {
+    document.getElementById('login-screen').style.display='flex';
+  }
+});
+
+function initData(){
+  const q = query(collection(db,'products'), orderBy('createdAt','asc'));
+  onSnapshot(q, snapshot => {
+    _products = snapshot.docs.map(d => ({id: d.id, ...d.data()}));
+    renderDashboard();
+    renderTable();
+    renderFeatured();
+  });
+}
+
+}
+
+document.getElementById('logout-btn').onclick = () => auth.signOut();
+
+// ════════════════════════════════════════
+// 資料
 // ════════════════════════════════════════
 const CAT_LABEL={dress:'娃衣套裝',blind:'娃娃盲盒',acc:'配件飾品',sale:'特價專區'};
 const CAT_BADGE={dress:'badge-dress',blind:'badge-blind',acc:'badge-acc',sale:'badge-sale'};
-
 let _products = [];
-
-const q = query(collection(db,'products'), orderBy('createdAt','asc'));
-onSnapshot(q, snapshot => {
-  _products = snapshot.docs.map(d => ({id: d.id, ...d.data()}));
-  renderDashboard();
-  renderTable();
-  renderFeatured();
-});
-
 function getProducts(){ return _products; }
 
 async function saveProduct_db(product, id){
-  if(id){
-    await setDoc(doc(db,'products',id), product);
-  } else {
-    await addDoc(collection(db,'products'), {...product, createdAt: serverTimestamp()});
-  }
+  if(id){ await setDoc(doc(db,'products',id), product); }
+  else { await addDoc(collection(db,'products'), {...product, createdAt: serverTimestamp()}); }
 }
-async function deleteProduct_db(id){
-  await deleteDoc(doc(db,'products',id));
-}
-async function updateFeatured_db(id, featured){
-  await setDoc(doc(db,'products',id), {featured}, {merge:true});
-}
+async function deleteProduct_db(id){ await deleteDoc(doc(db,'products',id)); }
+async function updateFeatured_db(id, featured){ await setDoc(doc(db,'products',id), {featured}, {merge:true}); }
 
 // ════════════════════════════════════════
 // 面板切換
