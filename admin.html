@@ -146,6 +146,7 @@ tr[onclick]:hover td{background:#fdf0f5;cursor:pointer;}
     <button class="menu-item active" onclick="switchPanel('dashboard',this)"><span class="icon">📊</span> 總覽</button>
     <button class="menu-item" onclick="switchPanel('products',this)"><span class="icon">🛍</span> 商品管理</button>
     <button class="menu-item" onclick="switchPanel('orders',this)"><span class="icon">📋</span> 訂單管理</button>
+    <button class="menu-item" onclick="switchPanel('banners',this)"><span class="icon">🖼</span> Banner 管理</button>
     <button class="menu-item" onclick="switchPanel('featured',this)"><span class="icon">⭐</span> 主打商品</button>
   </nav>
   <div class="sidebar-footer">
@@ -231,6 +232,63 @@ tr[onclick]:hover td{background:#fdf0f5;cursor:pointer;}
           <button class="btn btn-pink" onclick="updateOrderStatus()">更新狀態</button>
           <button class="btn btn-outline" onclick="closeOrderDetail()">關閉</button>
         </div>
+      </div>
+    </div>
+
+    <!-- Banner 管理 -->
+    <div class="panel" id="panel-banners">
+      <div class="table-wrap">
+        <div class="table-header">
+          <h3>Banner 輪播管理</h3>
+          <button class="btn btn-pink" onclick="openBannerDrawer()">＋ 新增 Banner</button>
+        </div>
+        <div id="banner-list" style="padding:1rem;"></div>
+      </div>
+    </div>
+
+    <!-- Banner Drawer -->
+    <div class="drawer-backdrop" id="banner-drawer-backdrop" onclick="closeBannerDrawer()"></div>
+    <div class="drawer" id="banner-drawer">
+      <div class="drawer-head">
+        <h2 id="banner-drawer-title">新增 Banner</h2>
+        <button class="drawer-close" onclick="closeBannerDrawer()">✕</button>
+      </div>
+      <div class="drawer-body">
+        <input type="hidden" id="b-edit-id">
+        <div class="fg"><label>標題</label><input type="text" id="b-title" placeholder="例：新品上架"></div>
+        <div class="fg"><label>副標題</label><input type="text" id="b-sub" placeholder="例：精選娃衣，每週更新"></div>
+        <div class="fg"><label>背景顏色（無圖時顯示）</label>
+          <select id="b-color">
+            <option value="linear-gradient(135deg,#fdf0f5,#f0c6d6)">粉色</option>
+            <option value="linear-gradient(135deg,#f0e8ff,#d4b8f0)">紫色</option>
+            <option value="linear-gradient(135deg,#ffe8f0,#ffb8d0)">玫瑰</option>
+            <option value="linear-gradient(135deg,#e8f5e9,#c8e6c9)">綠色</option>
+            <option value="linear-gradient(135deg,#e8f4ff,#b8d8f0)">藍色</option>
+          </select>
+        </div>
+        <div class="fg"><label>Emoji（無圖時顯示）</label><input type="text" id="b-emoji" placeholder="🌸"></div>
+        <div class="fg"><label>點擊連結到</label>
+          <select id="b-link">
+            <option value="shop">商品頁</option>
+            <option value="about">關於我們</option>
+            <option value="contact">聯絡</option>
+            <option value="">無連結</option>
+          </select>
+        </div>
+        <div class="fg"><label>排列順序</label><input type="number" id="b-order" placeholder="1" min="1"></div>
+        <div class="fg">
+          <label>Banner 圖片（建議比例 16:6）</label>
+          <div class="img-upload-area" onclick="document.getElementById('b-img-input').click()">
+            <input type="file" id="b-img-input" accept="image/*" onchange="handleBannerImg(event)">
+            <div class="img-upload-icon">🖼</div>
+            <div class="img-upload-text">點擊上傳圖片<br><span style="font-size:.7rem;opacity:.7;">建議尺寸 1200×450px</span></div>
+          </div>
+          <div id="b-img-preview" style="margin-top:.8rem;"></div>
+        </div>
+      </div>
+      <div class="drawer-footer">
+        <button class="btn btn-outline" onclick="closeBannerDrawer()">取消</button>
+        <button class="btn btn-pink" onclick="saveBanner()">儲存 ✓</button>
       </div>
     </div>
 
@@ -418,6 +476,7 @@ function initData(){
     renderOrders();
     renderDashboard();
   });
+  loadAdminBanners();
 }
 
 document.getElementById('logout-btn').onclick = () => auth.signOut();
@@ -502,7 +561,7 @@ async function updateOrder_db(docId, status, payStatus){ await updateDoc(doc(db,
 // ════════════════════════════════════════
 // 面板切換
 // ════════════════════════════════════════
-const panelTitles={dashboard:'總覽',products:'商品管理',orders:'訂單管理',featured:'主打商品設定'};
+const panelTitles={dashboard:'總覽',products:'商品管理',orders:'訂單管理',banners:'Banner 管理',featured:'主打商品設定'};
 function switchPanel(id,btn){
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.menu-item').forEach(b=>b.classList.remove('active'));
@@ -511,6 +570,8 @@ function switchPanel(id,btn){
   document.getElementById('topbar-title').textContent=panelTitles[id]||'';
   if(id==='dashboard') renderDashboard();
   if(id==='products') renderTable();
+  if(id==='orders') renderOrders();
+  if(id==='banners') renderBanners();
   if(id==='featured') renderFeatured();
 }
 
@@ -861,6 +922,128 @@ function toast(msg,type=''){
 }
 
 // ════════════════════════════════════════
+// Banner 管理
+// ════════════════════════════════════════
+let _banners=[];
+let bannerEditImg='';
+
+async function loadAdminBanners(){
+  const {getDocs:gd}=await import("https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js");
+  const snap=await gd(collection(db,'banners'));
+  _banners=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.order||0)-(b.order||0));
+  renderBanners();
+}
+
+function renderBanners(){
+  const list=document.getElementById('banner-list');
+  if(!list) return;
+  if(!_banners.length){list.innerHTML='<div class="empty"><div class="e-icon">🖼</div>尚未新增 Banner</div>';return;}
+  list.innerHTML=_banners.map(b=>`
+    <div style="display:flex;align-items:center;gap:1rem;background:var(--cream);border-radius:12px;padding:.8rem 1rem;margin-bottom:.7rem;">
+      <div style="width:80px;height:40px;border-radius:8px;overflow:hidden;flex-shrink:0;background:${b.color||'var(--pink)'};display:flex;align-items:center;justify-content:center;font-size:1.2rem;">
+        ${b.img?`<img src="${b.img}" style="width:100%;height:100%;object-fit:cover;">`:(b.emoji||'🌸')}
+      </div>
+      <div style="flex:1;">
+        <div style="font-size:.88rem;font-weight:500;">${b.title||'（無標題）'}</div>
+        <div style="font-size:.75rem;color:var(--text2);">順序：${b.order||1}　連結：${b.link||'無'}</div>
+      </div>
+      <div style="display:flex;gap:.4rem;">
+        <button class="btn btn-outline btn-sm" onclick="editBanner('${b.id}')">編輯</button>
+        <button class="btn btn-red btn-sm" onclick="deleteBanner('${b.id}')">刪除</button>
+      </div>
+    </div>`).join('');
+}
+
+function openBannerDrawer(reset=true){
+  if(reset){
+    document.getElementById('banner-drawer-title').textContent='新增 Banner';
+    document.getElementById('b-edit-id').value='';
+    document.getElementById('b-title').value='';
+    document.getElementById('b-sub').value='';
+    document.getElementById('b-emoji').value='🌸';
+    document.getElementById('b-order').value='1';
+    document.getElementById('b-color').value='linear-gradient(135deg,#fdf0f5,#f0c6d6)';
+    document.getElementById('b-link').value='shop';
+    document.getElementById('b-img-preview').innerHTML='';
+    bannerEditImg='';
+  }
+  document.getElementById('banner-drawer-backdrop').classList.add('open');
+  document.getElementById('banner-drawer').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function closeBannerDrawer(){
+  document.getElementById('banner-drawer-backdrop').classList.remove('open');
+  document.getElementById('banner-drawer').classList.remove('open');
+  document.body.style.overflow='';
+}
+
+function editBanner(id){
+  const b=_banners.find(x=>x.id===id);
+  if(!b) return;
+  document.getElementById('banner-drawer-title').textContent='編輯 Banner';
+  document.getElementById('b-edit-id').value=b.id;
+  document.getElementById('b-title').value=b.title||'';
+  document.getElementById('b-sub').value=b.sub||'';
+  document.getElementById('b-emoji').value=b.emoji||'🌸';
+  document.getElementById('b-order').value=b.order||1;
+  document.getElementById('b-color').value=b.color||'linear-gradient(135deg,#fdf0f5,#f0c6d6)';
+  document.getElementById('b-link').value=b.link||'shop';
+  bannerEditImg=b.img||'';
+  document.getElementById('b-img-preview').innerHTML=b.img?`<img src="${b.img}" style="width:100%;height:80px;object-fit:cover;border-radius:8px;">`:'' ;
+  openBannerDrawer(false);
+}
+
+function handleBannerImg(e){
+  const file=e.target.files[0];
+  if(!file) return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    const img=new Image();
+    img.onload=()=>{
+      const canvas=document.createElement('canvas');
+      let w=img.width,h=img.height;
+      if(w>1200){h=Math.round(h*1200/w);w=1200;}
+      canvas.width=w;canvas.height=h;
+      canvas.getContext('2d').drawImage(img,0,0,w,h);
+      bannerEditImg=canvas.toDataURL('image/jpeg',0.8);
+      document.getElementById('b-img-preview').innerHTML=`<img src="${bannerEditImg}" style="width:100%;height:80px;object-fit:cover;border-radius:8px;margin-top:.5rem;">`;
+    };
+    img.src=ev.target.result;
+  };
+  reader.readAsDataURL(file);
+  e.target.value='';
+}
+
+async function saveBanner(){
+  const editId=document.getElementById('b-edit-id').value;
+  const data={
+    title:document.getElementById('b-title').value.trim(),
+    sub:document.getElementById('b-sub').value.trim(),
+    emoji:document.getElementById('b-emoji').value.trim()||'🌸',
+    color:document.getElementById('b-color').value,
+    link:document.getElementById('b-link').value,
+    order:parseInt(document.getElementById('b-order').value)||1,
+    img:bannerEditImg||'',
+  };
+  try{
+    if(editId){ await setDoc(doc(db,'banners',editId),data); }
+    else { await addDoc(collection(db,'banners'),data); }
+    await loadAdminBanners();
+    closeBannerDrawer();
+    toast('✓ Banner 已儲存');
+  }catch(e){ toast('❌ 儲存失敗','error'); }
+}
+
+async function deleteBanner(id){
+  if(!confirm('確定刪除此 Banner？')) return;
+  try{
+    await deleteDoc(doc(db,'banners',id));
+    await loadAdminBanners();
+    toast('🗑 Banner 已刪除');
+  }catch(e){ toast('❌ 刪除失敗','error'); }
+}
+
+// ════════════════════════════════════════
 // 暴露全域函式
 // ════════════════════════════════════════
 window.switchPanel=switchPanel;
@@ -880,6 +1063,13 @@ window.renderOrders=renderOrders;
 window.openOrderDetail=openOrderDetail;
 window.closeOrderDetail=closeOrderDetail;
 window.updateOrderStatus=updateOrderStatus;
+window.openBannerDrawer=openBannerDrawer;
+window.closeBannerDrawer=closeBannerDrawer;
+window.editBanner=editBanner;
+window.deleteBanner=deleteBanner;
+window.saveBanner=saveBanner;
+window.handleBannerImg=handleBannerImg;
+window.renderBanners=renderBanners;
 </script>
 </body>
 </html>

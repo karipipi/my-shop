@@ -38,6 +38,27 @@ nav{background:#ffffff;border-bottom:1.5px solid var(--border);position:sticky;t
 .hero h1{font-family:'Noto Serif TC',serif;font-size:2.4rem;font-weight:500;color:var(--pink4);margin-bottom:.8rem;letter-spacing:.1em;}
 .hero p{color:var(--text2);font-size:1rem;line-height:1.9;max-width:480px;margin:0 auto 1.5rem;}
 .hero-btns{display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;}
+/* Banner 輪播 */
+.banner-slider{position:relative;width:100%;overflow:hidden;border-radius:16px;margin-bottom:2.5rem;background:var(--pink);aspect-ratio:16/6;}
+.banner-track{display:flex;height:100%;transition:transform .5s cubic-bezier(.4,0,.2,1);}
+.banner-slide{min-width:100%;height:100%;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;}
+.banner-slide img{width:100%;height:100%;object-fit:cover;}
+.banner-slide-placeholder{width:100%;height:100%;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:1rem;}
+.banner-slide-placeholder .b-emoji{font-size:3rem;}
+.banner-slide-placeholder .b-title{font-family:'Noto Serif TC',serif;font-size:1.6rem;color:var(--pink4);font-weight:500;}
+.banner-slide-placeholder .b-sub{font-size:.9rem;color:var(--text2);}
+.banner-arrow{position:absolute;top:50%;transform:translateY(-50%);background:rgba(255,255,255,.85);border:none;border-radius:50%;width:40px;height:40px;font-size:1.2rem;cursor:pointer;color:var(--pink4);display:flex;align-items:center;justify-content:center;z-index:5;transition:background .2s;}
+.banner-arrow:hover{background:#fff;}
+.banner-arrow.prev{left:.8rem;}
+.banner-arrow.next{right:.8rem;}
+.banner-dots{display:flex;gap:.5rem;justify-content:center;margin-top:.8rem;margin-bottom:1.5rem;}
+.banner-dot{width:8px;height:8px;border-radius:50%;background:var(--pink2);border:none;cursor:pointer;padding:0;transition:all .2s;}
+.banner-dot.active{background:var(--pink4);width:20px;border-radius:4px;}
+@media(max-width:768px){
+  .banner-slider{aspect-ratio:16/9;border-radius:0;margin-left:-1rem;margin-right:-1rem;width:calc(100% + 2rem);}
+  .banner-slide-placeholder .b-title{font-size:1.1rem;}
+  .banner-arrow{width:32px;height:32px;font-size:1rem;}
+}
 .btn-primary{background:var(--pink4);color:var(--white);border:none;border-radius:25px;padding:.7rem 1.8rem;font-size:.9rem;cursor:pointer;font-family:inherit;transition:all .2s;}
 .btn-primary:hover{background:#9a4a65;transform:translateY(-1px);}
 .btn-outline{background:transparent;color:var(--pink4);border:1.5px solid var(--pink3);border-radius:25px;padding:.7rem 1.8rem;font-size:.9rem;cursor:pointer;font-family:inherit;transition:all .2s;}
@@ -147,6 +168,7 @@ nav{background:#ffffff;border-bottom:1.5px solid var(--border);position:sticky;t
   .hero h1{font-size:1.6rem;}
   .hero p{font-size:.88rem;}
   .hero-btns{flex-direction:column;align-items:center;}
+  .banner-slider{aspect-ratio:16/9;border-radius:0;margin-left:-1rem;margin-right:-1rem;width:calc(100% + 2rem);}
   .product-grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:.8rem;}
   .section-title{font-size:1.1rem;}
   /* 結帳頁 */
@@ -253,14 +275,12 @@ nav{background:#ffffff;border-bottom:1.5px solid var(--border);position:sticky;t
 </div>
 <!-- HOME -->
 <div class="page active" id="home">
-  <div class="hero">
-    <h1>櫻花喵小舖</h1>
-    <p>精選娃衣・可愛盲盒<br>為你的娃娃找到最適合的一套</p>
-    <div class="hero-btns">
-      <button class="btn-primary" onclick="show('shop')">立即逛逛 →</button>
-      <button class="btn-outline" onclick="show('about')">關於我們</button>
-    </div>
+  <div class="banner-slider" id="banner-slider">
+    <div class="banner-track" id="banner-track"></div>
+    <button class="banner-arrow prev" id="banner-prev" onclick="bannerNav(-1)">‹</button>
+    <button class="banner-arrow next" id="banner-next" onclick="bannerNav(1)">›</button>
   </div>
+  <div class="banner-dots" id="banner-dots"></div>
   <div class="section-title">本週主打商品</div>
   <div class="section-sub">精心挑選，每週更新 ✿</div>
   <div class="product-grid" id="home-grid"></div>
@@ -473,6 +493,77 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 // ════════════════════════════════════════
+// Banner 輪播
+// ════════════════════════════════════════
+let _banners=[];
+let bannerIdx=0;
+let bannerTimer=null;
+
+const DEFAULT_BANNERS=[
+  {id:'b1',color:'linear-gradient(135deg,#fdf0f5,#f0c6d6)',emoji:'🌸',title:'櫻花喵小舖',sub:'精選娃衣・可愛盲盒',link:'shop'},
+  {id:'b2',color:'linear-gradient(135deg,#f0e8ff,#d4b8f0)',emoji:'🎀',title:'新品上架',sub:'每週精心挑選，為你的娃娃找到最適合的一套',link:'shop'},
+  {id:'b3',color:'linear-gradient(135deg,#ffe8f0,#ffb8d0)',emoji:'🎁',title:'滿1200元免運',sub:'立即選購，享受免運優惠',link:'shop'},
+];
+
+async function loadBanners(){
+  try{
+    const {getDocs:gd}=await import("https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js");
+    const snap=await gd(collection(db,'banners'));
+    if(!snap.empty){
+      _banners=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.order||0)-(b.order||0));
+    } else {
+      _banners=DEFAULT_BANNERS;
+    }
+  }catch(e){
+    _banners=DEFAULT_BANNERS;
+  }
+  renderBanner();
+}
+
+function renderBanner(){
+  const track=document.getElementById('banner-track');
+  const dots=document.getElementById('banner-dots');
+  if(!track||!_banners.length) return;
+  track.innerHTML=_banners.map(b=>{
+    if(b.img){
+      return `<div class="banner-slide" style="cursor:${b.link?'pointer':'default'}" onclick="${b.link?`show('${b.link}')`:''}">
+        <img src="${b.img}" alt="${b.title||''}">
+      </div>`;
+    }
+    return `<div class="banner-slide" style="background:${b.color||'var(--pink)'}; cursor:${b.link?'pointer':'default'}" onclick="${b.link?`show('${b.link}')`:''}">
+      <div class="banner-slide-placeholder">
+        <div class="b-emoji">${b.emoji||'🌸'}</div>
+        <div class="b-title">${b.title||''}</div>
+        <div class="b-sub">${b.sub||''}</div>
+      </div>
+    </div>`;
+  }).join('');
+  dots.innerHTML=_banners.map((_,i)=>
+    `<button class="banner-dot${i===0?' active':''}" onclick="setBanner(${i})"></button>`
+  ).join('');
+  setBanner(0);
+  startBannerTimer();
+}
+
+function setBanner(i){
+  bannerIdx=i;
+  const track=document.getElementById('banner-track');
+  if(track) track.style.transform=`translateX(-${i*100}%)`;
+  document.querySelectorAll('.banner-dot').forEach((d,idx)=>d.classList.toggle('active',idx===i));
+}
+
+function bannerNav(dir){
+  clearInterval(bannerTimer);
+  setBanner((bannerIdx+dir+_banners.length)%_banners.length);
+  startBannerTimer();
+}
+
+function startBannerTimer(){
+  clearInterval(bannerTimer);
+  if(_banners.length>1) bannerTimer=setInterval(()=>setBanner((bannerIdx+1)%_banners.length),4000);
+}
+
+// ════════════════════════════════════════
 // 資料管理（從 Firestore 讀取）
 // ════════════════════════════════════════
 let _products = [];
@@ -658,6 +749,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
 // 初始化
 // ════════════════════════════════════════
 loadProducts();
+loadBanners();
 
 // 暴露全域函式（module scope 需要）
 window.show=show;
@@ -668,6 +760,8 @@ window.galleryNav=galleryNav;
 window.setGallery=setGallery;
 window.addToCart=addToCart;
 window.changeQty=changeQty;
+window.bannerNav=bannerNav;
+window.setBanner=setBanner;
 window.queryOrders=window.queryOrders;
 window.openOrderPanel=window.openOrderPanel;
 window.closeOrderPanel=window.closeOrderPanel;
