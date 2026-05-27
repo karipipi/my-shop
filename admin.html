@@ -220,12 +220,17 @@ tr:hover td{background:#fdf5f8;}
       </div>
       <div class="fg">
         <label>分類 *</label>
-        <select id="f-cat">
+        <select id="f-cat" onchange="handleCatChange(this)">
           <option value="dress">娃衣套裝</option>
           <option value="blind">娃娃盲盒</option>
           <option value="acc">配件飾品</option>
           <option value="sale">特價專區</option>
+          <option value="__custom__">＋ 新增自訂分類…</option>
         </select>
+        <div id="custom-cat-wrap" style="display:none;margin-top:.5rem;display:none;">
+          <input type="text" id="f-cat-custom" placeholder="輸入新分類名稱（如：新品上市）" style="border:1.5px solid var(--border);border-radius:10px;padding:.55rem .85rem;font-size:.85rem;font-family:inherit;width:100%;background:var(--cream);outline:none;">
+          <div class="fg-hint">輸入後會自動新增到分類清單</div>
+        </div>
       </div>
     </div>
 
@@ -240,15 +245,9 @@ tr:hover td{background:#fdf5f8;}
       </div>
     </div>
 
-    <div class="fg-row">
-      <div class="fg">
-        <label>標籤文字</label>
-        <input type="text" id="f-tag" placeholder="例：娃衣、新品、限定">
-      </div>
-      <div class="fg">
-        <label>Emoji（無圖時顯示）</label>
-        <input type="text" id="f-emoji" placeholder="🌸">
-      </div>
+    <div class="fg">
+      <label>標籤文字</label>
+      <input type="text" id="f-tag" placeholder="例：娃衣、新品、限定">
     </div>
 
     <div class="fg">
@@ -373,10 +372,69 @@ function initData(){
 document.getElementById('logout-btn').onclick = () => auth.signOut();
 
 // ════════════════════════════════════════
-// 資料
+// 自訂分類管理
 // ════════════════════════════════════════
-const CAT_LABEL={dress:'娃衣套裝',blind:'娃娃盲盒',acc:'配件飾品',sale:'特價專區'};
+const DEFAULT_CATS = {dress:'娃衣套裝',blind:'娃娃盲盒',acc:'配件飾品',sale:'特價專區'};
 const CAT_BADGE={dress:'badge-dress',blind:'badge-blind',acc:'badge-acc',sale:'badge-sale'};
+
+function getCustomCats(){
+  try{ return JSON.parse(localStorage.getItem('sakura_custom_cats')||'{}'); }catch(e){ return {}; }
+}
+function saveCustomCats(cats){ localStorage.setItem('sakura_custom_cats', JSON.stringify(cats)); }
+function getCatLabel(cat){
+  return DEFAULT_CATS[cat] || getCustomCats()[cat] || cat;
+}
+function getCatBadge(cat){ return CAT_BADGE[cat]||'badge-dress'; }
+
+function buildCatSelect(){
+  const sel = document.getElementById('f-cat');
+  const current = sel.value;
+  const customCats = getCustomCats();
+  sel.innerHTML = '';
+  // 預設分類
+  Object.entries(DEFAULT_CATS).forEach(([v,l])=>{
+    sel.innerHTML += `<option value="${v}">${l}</option>`;
+  });
+  // 自訂分類
+  Object.entries(customCats).forEach(([v,l])=>{
+    sel.innerHTML += `<option value="${v}">${l}</option>`;
+  });
+  sel.innerHTML += `<option value="__custom__">＋ 新增自訂分類…</option>`;
+  if(current) sel.value = current;
+}
+
+function handleCatChange(sel){
+  const wrap = document.getElementById('custom-cat-wrap');
+  if(sel.value === '__custom__'){
+    wrap.style.display = 'block';
+    document.getElementById('f-cat-custom').focus();
+    document.getElementById('f-cat-custom').onblur = ()=>{
+      const name = document.getElementById('f-cat-custom').value.trim();
+      if(name){
+        const key = 'custom_' + Date.now();
+        const cats = getCustomCats();
+        cats[key] = name;
+        saveCustomCats(cats);
+        buildCatSelect();
+        document.getElementById('f-cat').value = key;
+        wrap.style.display = 'none';
+        document.getElementById('f-cat-custom').value = '';
+        // 也更新篩選tab
+        buildShopFilterTabs();
+      }
+    };
+  } else {
+    wrap.style.display = 'none';
+  }
+}
+
+function buildShopFilterTabs(){
+  // 更新後台的分類標籤顯示（若有需要可擴充）
+}
+
+const CAT_LABEL = new Proxy({}, {
+  get(_, cat){ return getCatLabel(cat); }
+});
 let _products = [];
 function getProducts(){ return _products; }
 
@@ -410,17 +468,17 @@ function renderDashboard(){
   const featured=products.filter(p=>p.featured).length;
   const cats=[...new Set(products.map(p=>p.cat))].length;
   document.getElementById('stat-grid').innerHTML=`
-    <div class="stat-card"><div class="stat-icon">🛍</div><div class="stat-value">${products.length}</div><div class="stat-label">商品總數</div></div>
-    <div class="stat-card"><div class="stat-icon">⭐</div><div class="stat-value">${featured}</div><div class="stat-label">主打商品</div></div>
-    <div class="stat-card"><div class="stat-icon">📂</div><div class="stat-value">${cats}</div><div class="stat-label">商品類別</div></div>
-    <div class="stat-card"><div class="stat-icon">🌸</div><div class="stat-value">${products.filter(p=>p.imgs&&p.imgs.length).length}</div><div class="stat-label">已上傳圖片</div></div>
+    <div class="stat-card"><div class="stat-icon" style="font-size:1rem;font-weight:600;color:var(--pink3);">商品</div><div class="stat-value">${products.length}</div><div class="stat-label">商品總數</div></div>
+    <div class="stat-card"><div class="stat-icon" style="font-size:1rem;font-weight:600;color:var(--pink3);">主打</div><div class="stat-value">${featured}</div><div class="stat-label">主打商品</div></div>
+    <div class="stat-card"><div class="stat-icon" style="font-size:1rem;font-weight:600;color:var(--pink3);">分類</div><div class="stat-value">${cats}</div><div class="stat-label">商品類別</div></div>
+    <div class="stat-card"><div class="stat-icon" style="font-size:1rem;font-weight:600;color:var(--pink3);">圖片</div><div class="stat-value">${products.filter(p=>p.imgs&&p.imgs.length).length}</div><div class="stat-label">已上傳圖片</div></div>
   `;
   document.getElementById('dash-table').innerHTML=products.slice(0,6).map(p=>`
     <tr>
-      <td><div style="display:flex;align-items:center;gap:.8rem;"><div class="td-img">${p.imgs&&p.imgs[0]?`<img src="${p.imgs[0]}">`:(p.emoji||'🌸')}</div><span>${p.name}</span></div></td>
-      <td><span class="badge ${CAT_BADGE[p.cat]}">${CAT_LABEL[p.cat]||p.cat}</span></td>
+      <td><div style="display:flex;align-items:center;gap:.8rem;"><div class="td-img">${p.imgs&&p.imgs[0]?`<img src="${p.imgs[0]}">`:''}</div><span>${p.name}</span></div></td>
+      <td><span class="badge ${getCatBadge(p.cat)}">${getCatLabel(p.cat)}</span></td>
       <td>NT$${p.price}${p.oldPrice?` <s style="color:var(--text2);font-size:.75rem;">NT$${p.oldPrice}</s>`:''}</td>
-      <td>${p.featured?'⭐':'—'}</td>
+      <td>${p.featured?'✓':'—'}</td>
     </tr>`).join('');
 }
 
@@ -438,9 +496,9 @@ function renderTable(){
   empty.style.display='none';
   tbody.innerHTML=filtered.map(p=>`
     <tr>
-      <td><div class="td-img">${p.imgs&&p.imgs[0]?`<img src="${p.imgs[0]}">`:(p.emoji||'🌸')}</div></td>
+      <td><div class="td-img">${p.imgs&&p.imgs[0]?`<img src="${p.imgs[0]}">`:''}</div></td>
       <td style="max-width:200px;">${p.name}</td>
-      <td><span class="badge ${CAT_BADGE[p.cat]}">${CAT_LABEL[p.cat]||p.cat}</span></td>
+      <td><span class="badge ${getCatBadge(p.cat)}">${getCatLabel(p.cat)}</span></td>
       <td>NT$${p.price}${p.oldPrice?` <s style="color:var(--text2);font-size:.75rem;">NT$${p.oldPrice}</s>`:''}</td>
       <td><button class="featured-toggle" onclick="toggleFeatured('${p.id}')" title="${p.featured?'取消主打':'設為主打'}">${p.featured?'⭐':'☆'}</button></td>
       <td>
@@ -459,9 +517,9 @@ function renderFeatured(){
   const products=getProducts();
   document.getElementById('featured-table').innerHTML=products.map(p=>`
     <tr>
-      <td><div class="td-img">${p.imgs&&p.imgs[0]?`<img src="${p.imgs[0]}">`:(p.emoji||'🌸')}</div></td>
+      <td><div class="td-img">${p.imgs&&p.imgs[0]?`<img src="${p.imgs[0]}">`:''}</div></td>
       <td>${p.name}</td>
-      <td><span class="badge ${CAT_BADGE[p.cat]}">${CAT_LABEL[p.cat]||p.cat}</span></td>
+      <td><span class="badge ${getCatBadge(p.cat)}">${getCatLabel(p.cat)}</span></td>
       <td>
         <label style="display:flex;align-items:center;gap:.5rem;cursor:pointer;">
           <input type="checkbox" ${p.featured?'checked':''} onchange="toggleFeatured('${p.id}')" style="accent-color:var(--pink4);width:16px;height:16px;">
@@ -480,16 +538,16 @@ function openDrawer(reset=true){
   if(reset){
     document.getElementById('drawer-title').textContent='新增商品';
     document.getElementById('edit-id').value='';
-    ['f-name','f-tag','f-emoji','f-desc'].forEach(id=>document.getElementById(id).value='');
+    ['f-name','f-tag','f-desc'].forEach(id=>document.getElementById(id).value='');
     document.getElementById('f-price').value='';
     document.getElementById('f-oldprice').value='';
-    document.getElementById('f-cat').value='dress';
     document.getElementById('f-featured').checked=false;
     editingImgs=[];
     renderImgPreviews();
     document.getElementById('spec-list').innerHTML='';
     addSpec();addSpec();
   }
+  buildCatSelect();
   document.getElementById('drawer-backdrop').classList.add('open');
   document.getElementById('drawer').classList.add('open');
   document.body.style.overflow='hidden';
@@ -507,7 +565,6 @@ function editProduct(id){
   document.getElementById('edit-id').value=p.id;
   document.getElementById('f-name').value=p.name;
   document.getElementById('f-tag').value=p.tag||'';
-  document.getElementById('f-emoji').value=p.emoji||'';
   document.getElementById('f-cat').value=p.cat;
   document.getElementById('f-price').value=p.price;
   document.getElementById('f-oldprice').value=p.oldPrice||'';
@@ -574,11 +631,10 @@ async function saveProduct(){
   const editId=document.getElementById('edit-id').value;
   const product={
     name,
-    tag: document.getElementById('f-tag').value.trim()||CAT_LABEL[document.getElementById('f-cat').value]||'',
-    cat: document.getElementById('f-cat').value,
+    tag: document.getElementById('f-tag').value.trim()||getCatLabel(document.getElementById('f-cat').value)||'',
+    cat: document.getElementById('f-cat').value==='__custom__'?'custom':document.getElementById('f-cat').value,
     price,
     oldPrice: parseInt(document.getElementById('f-oldprice').value)||0,
-    emoji: document.getElementById('f-emoji').value.trim()||'🌸',
     imgs: [...editingImgs],
     desc: document.getElementById('f-desc').value.trim(),
     specs: getSpecs(),
@@ -647,6 +703,7 @@ window.addSpec=addSpec;
 window.handleImgUpload=handleImgUpload;
 window.removeImg=removeImg;
 window.renderTable=renderTable;
+window.handleCatChange=handleCatChange;
 </script>
 </body>
 </html>
