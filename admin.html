@@ -581,16 +581,37 @@ function editProduct(id){
 }
 
 // ════════════════════════════════════════
-// 圖片上傳
+// 圖片上傳（自動壓縮）
 // ════════════════════════════════════════
 function handleImgUpload(e){
   const files=[...e.target.files];
   files.forEach(file=>{
     const reader=new FileReader();
-    reader.onload=ev=>{editingImgs.push(ev.target.result);renderImgPreviews();};
+    reader.onload=ev=>{
+      compressImage(ev.target.result, 800, 0.7, compressed=>{
+        editingImgs.push(compressed);
+        renderImgPreviews();
+      });
+    };
     reader.readAsDataURL(file);
   });
   e.target.value='';
+}
+
+function compressImage(dataUrl, maxSize, quality, callback){
+  const img=new Image();
+  img.onload=()=>{
+    let w=img.width, h=img.height;
+    if(w>maxSize||h>maxSize){
+      if(w>h){h=Math.round(h*maxSize/w);w=maxSize;}
+      else{w=Math.round(w*maxSize/h);h=maxSize;}
+    }
+    const canvas=document.createElement('canvas');
+    canvas.width=w; canvas.height=h;
+    canvas.getContext('2d').drawImage(img,0,0,w,h);
+    callback(canvas.toDataURL('image/jpeg', quality));
+  };
+  img.src=dataUrl;
 }
 function renderImgPreviews(){
   const list=document.getElementById('img-preview-list');
