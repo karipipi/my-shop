@@ -14,7 +14,7 @@
 body{font-family:'Zen Maru Gothic',sans-serif;background:var(--cream) url('sakuracat.png') center/100% no-repeat fixed;color:var(--text);min-height:100vh;}
 .banner{background:#b85c78;color:#ffffff;text-align:center;padding:.5rem;font-size:.8rem;letter-spacing:.06em;position:relative;z-index:200;}
 nav{background:#ffffff;border-bottom:1.5px solid var(--border);position:sticky;top:0;z-index:200;padding:0 3rem;}
-.nav-inner{max-width:100%;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:70px;}
+.nav-inner{max-width:100%;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:70px;position:relative;}
 .logo{font-family:'Noto Serif TC',serif;font-size:1.6rem;font-weight:500;color:var(--pink4);letter-spacing:.08em;display:flex;align-items:center;gap:.5rem;}
 .logo span{font-size:1.7rem;}
 .nav-links{display:flex;gap:2.5rem;list-style:none;position:absolute;left:50%;transform:translateX(-50%);}
@@ -22,6 +22,13 @@ nav{background:#ffffff;border-bottom:1.5px solid var(--border);position:sticky;t
 .nav-links a:hover{color:var(--pink4);}
 .nav-cart{background:var(--pink4);color:var(--white);border:none;border-radius:20px;padding:.6rem 1.6rem;font-size:1rem;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:.4rem;transition:background .2s;}
 .nav-cart:hover{background:#9a4a65;}
+.hamburger{display:none;flex-direction:column;gap:5px;background:none;border:none;cursor:pointer;padding:.3rem;}
+.hamburger span{display:block;width:24px;height:2px;background:var(--pink4);border-radius:2px;transition:all .3s;}
+.mobile-menu{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(255,255,255,.97);z-index:300;flex-direction:column;align-items:center;justify-content:center;gap:2rem;}
+.mobile-menu.open{display:flex;}
+.mobile-menu a{font-family:'Noto Serif TC',serif;font-size:1.4rem;color:var(--pink4);text-decoration:none;letter-spacing:.1em;}
+.mobile-menu-close{position:absolute;top:1.2rem;right:1.5rem;background:var(--pink);border:none;border-radius:50%;width:40px;height:40px;font-size:1.2rem;cursor:pointer;color:var(--pink4);}
+.mobile-cart{background:var(--pink4);color:#fff;border:none;border-radius:20px;padding:.7rem 2rem;font-size:1rem;cursor:pointer;font-family:inherit;margin-top:.5rem;}
 .page{display:none;max-width:1100px;margin:0 auto;padding:2rem;position:relative;z-index:1;}
 .page.active{display:block;}
 .bg-overlay{position:fixed;inset:0;background:rgba(255,255,255,0.70);z-index:0;pointer-events:none;}
@@ -126,18 +133,18 @@ nav{background:#ffffff;border-bottom:1.5px solid var(--border);position:sticky;t
 .modal-wish-btn:hover{background:var(--pink2);}
 .empty-state{text-align:center;padding:3rem;color:var(--text2);font-size:.9rem;}
 .empty-state .e-icon{font-size:2.5rem;margin-bottom:.8rem;}
-@media(max-width:640px){
+@media(max-width:768px){
+  nav{padding:0 1.2rem;}
+  .nav-inner{height:56px;}
+  .logo{font-size:1.15rem;}
+  .logo span{font-size:1.25rem;}
+  .nav-links{display:none;}
+  .nav-cart{display:none;}
+  .hamburger{display:flex;}
+  .page{padding:1.2rem;}
   .checkout-layout{grid-template-columns:1fr;}
   .hero{padding:2.5rem 1.5rem;}
   .hero h1{font-size:1.7rem;}
-  nav{padding:0 1rem;}
-  .nav-inner{height:54px;}
-  .logo{font-size:1.1rem;}
-  .logo span{font-size:1.2rem;}
-  .nav-links{gap:1rem;}
-  .nav-links a{font-size:.78rem;}
-  .nav-cart{padding:.35rem .9rem;font-size:.78rem;}
-  .page{padding:1.2rem;}
 }
 </style>
 </head>
@@ -153,9 +160,24 @@ nav{background:#ffffff;border-bottom:1.5px solid var(--border);position:sticky;t
       <li><a href="#" onclick="show('about')">關於我們</a></li>
       <li><a href="#" onclick="show('contact')">聯絡</a></li>
     </ul>
-    <button class="nav-cart" onclick="show('checkout')">🛒 購物車 <span id="cart-count">0</span></button>
+    <div style="display:flex;align-items:center;gap:.8rem;">
+      <button class="nav-cart" onclick="show('checkout')">🛒 購物車 <span id="cart-count">0</span></button>
+      <button class="hamburger" id="hamburger-btn" onclick="toggleMobileMenu()">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
   </div>
 </nav>
+
+<!-- 手機選單 -->
+<div class="mobile-menu" id="mobile-menu">
+  <button class="mobile-menu-close" onclick="toggleMobileMenu()">✕</button>
+  <a href="#" onclick="show('home');toggleMobileMenu()">首頁</a>
+  <a href="#" onclick="show('shop');toggleMobileMenu()">商品</a>
+  <a href="#" onclick="show('about');toggleMobileMenu()">關於我們</a>
+  <a href="#" onclick="show('contact');toggleMobileMenu()">聯絡</a>
+  <button class="mobile-cart" onclick="show('checkout');toggleMobileMenu()">🛒 購物車 <span id="cart-count-mobile">0</span></button>
+</div>
 <!-- HOME -->
 <div class="page active" id="home">
   <div class="hero">
@@ -323,7 +345,10 @@ function addToCart(productId){
   showToast();
 }
 function updateCartCount(){
-  document.getElementById('cart-count').textContent=cart.reduce((s,x)=>s+x.qty,0);
+  const count=cart.reduce((s,x)=>s+x.qty,0);
+  document.getElementById('cart-count').textContent=count;
+  const m=document.getElementById('cart-count-mobile');
+  if(m) m.textContent=count;
 }
 function renderCart(){
   const el=document.getElementById('cart-list');
@@ -486,6 +511,9 @@ window.galleryNav=galleryNav;
 window.setGallery=setGallery;
 window.addToCart=addToCart;
 window.changeQty=changeQty;
+window.toggleMobileMenu=function(){
+  document.getElementById('mobile-menu').classList.toggle('open');
+};
 window.sendContactEmail=async function(){
   const name=document.getElementById('contact-name').value.trim();
   const contact=document.getElementById('contact-contact').value.trim();
