@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>棉花糖娃衣坊</title>
+<title>櫻花喵小舖</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@300;400;500&family=Zen+Maru+Gothic:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
@@ -11,8 +11,8 @@
   --pink:#f9e8ee;--pink2:#f0c6d6;--pink3:#d4829b;--pink4:#b85c78;
   --cream:#fdf8f5;--text:#3a2a30;--text2:#7a5a65;--white:#ffffff;--border:#edd5df;
 }
-body{font-family:'Zen Maru Gothic',sans-serif;background:var(--cream);color:var(--text);min-height:100vh;}
-nav{background:var(--white);border-bottom:1.5px solid var(--border);position:sticky;top:0;z-index:100;padding:0 2rem;}
+body::before{content:'';position:fixed;inset:0;background:rgba(255,255,255,0.82);z-index:0;pointer-events:none;}
+body{font-family:'Zen Maru Gothic',sans-serif;background:var(--cream)url('images/貓貓.png') center/cover fixed0 2rem;}
 .nav-inner{max-width:1100px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:64px;}
 .logo{font-family:'Noto Serif TC',serif;font-size:1.3rem;font-weight:500;color:var(--pink4);letter-spacing:.08em;display:flex;align-items:center;gap:.5rem;}
 .logo span{font-size:1.4rem;}
@@ -95,7 +95,7 @@ nav{background:var(--white);border-bottom:1.5px solid var(--border);position:sti
 <div class="banner">🌸 滿1200元免運・新品持續上架・歡迎追蹤 🌸</div>
 <nav>
   <div class="nav-inner">
-    <div class="logo"><span>🐱</span> 棉花糖娃衣坊</div>
+    <div class="logo"><span>🐱</span> 櫻花喵小舖</div>
     <ul class="nav-links">
       <li><a href="#" onclick="show('home')">首頁</a></li>
       <li><a href="#" onclick="show('shop')">商品</a></li>
@@ -108,7 +108,7 @@ nav{background:var(--white);border-bottom:1.5px solid var(--border);position:sti
 <!-- HOME -->
 <div class="page active" id="home">
   <div class="hero">
-    <h1>棉花糖娃衣坊</h1>
+    <h1>櫻花喵小舖</h1>
     <p>精選娃衣・可愛盲盒<br>為你的娃娃找到最適合的一套</p>
     <div class="hero-btns">
       <button class="btn-primary" onclick="show('shop')">立即逛逛 →</button>
@@ -153,8 +153,8 @@ nav{background:var(--white);border-bottom:1.5px solid var(--border);position:sti
     <div class="section-sub">每一件娃衣，都是我們的心意 🐱</div>
     <div class="about-card">
       <div class="about-avatar">🐱</div>
-      <h2>棉花糖娃衣坊</h2>
-      <p>Hi！這裡是棉花糖娃衣坊，一個由娃娃控創立的小小網路商店。<br><br>從一開始只是幫自己的娃娃找衣服，到現在喜歡和大家一起分享各種娃衣和盲盒。每一款商品都是精心挑選，希望讓你的娃娃穿上最適合的衣服💕<br><br>目前在蝦皮也有營業，歡迎大家來逛逛！</p>
+      <h2>櫻花喵小舖</h2>
+      <p>Hi！這裡是櫻花喵小舖，一個由娃娃控創立的小小網路商店。<br><br>從一開始只是幫自己的娃娃找衣服，到現在喜歡和大家一起分享各種娃衣和盲盒。每一款商品都是精心挑選，希望讓你的娃娃穿上最適合的衣服💕<br><br>目前在蝦皮也有營業，歡迎大家來逛逛！</p>
       <div class="about-tags">
         <span class="about-tag">🌸 精選娃衣</span>
         <span class="about-tag">🎁 娃娃盲盒</span>
