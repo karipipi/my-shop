@@ -471,14 +471,6 @@ function renderFeatured(){
     </tr>`).join('');
 }
 
-function toggleFeatured(id){
-  const products=getProducts();
-  const p=products.find(x=>x.id===id);
-  if(p){p.featured=!p.featured;saveProducts(products);}
-  renderTable();renderFeatured();renderDashboard();
-  toast(p.featured?'⭐ 已加入主打商品':'已移除主打商品');
-}
-
 // ════════════════════════════════════════
 // Drawer 開關
 // ════════════════════════════════════════
