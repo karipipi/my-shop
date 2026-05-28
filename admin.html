@@ -100,10 +100,13 @@ tr[onclick]:hover td{background:#fdf0f5;cursor:pointer;}
 .img-upload-icon{font-size:2rem;margin-bottom:.4rem;}
 .img-upload-text{font-size:.82rem;color:var(--text2);}
 .img-preview-list{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:.8rem;}
-.img-preview-item{position:relative;width:72px;height:72px;border-radius:10px;overflow:hidden;border:2px solid var(--border);background:linear-gradient(135deg,var(--pink),var(--pink2));display:flex;align-items:center;justify-content:center;font-size:1.8rem;}
-.img-preview-item img{width:100%;height:100%;object-fit:cover;}
+.img-preview-item{position:relative;width:80px;height:80px;border-radius:10px;overflow:hidden;border:2px solid var(--border);background:linear-gradient(135deg,var(--pink),var(--pink2));display:flex;align-items:center;justify-content:center;font-size:1.8rem;cursor:grab;transition:opacity .2s,transform .2s;}
+.img-preview-item.dragging{opacity:.4;transform:scale(.95);}
+.img-preview-item.drag-over{border-color:var(--pink4);transform:scale(1.05);}
+.img-preview-item img{width:100%;height:100%;object-fit:cover;pointer-events:none;}
 .img-preview-item .img-del{position:absolute;top:2px;right:2px;background:rgba(0,0,0,.55);color:#fff;border:none;border-radius:50%;width:18px;height:18px;font-size:.65rem;cursor:pointer;display:flex;align-items:center;justify-content:center;}
 .img-preview-item .img-main-badge{position:absolute;bottom:0;left:0;right:0;background:rgba(184,92,120,.85);color:#fff;font-size:.6rem;text-align:center;padding:1px;}
+.img-drag-hint{font-size:.72rem;color:var(--text2);margin-top:.4rem;}
 
 /* ── 規格編輯器 ── */
 .spec-list{display:flex;flex-direction:column;gap:.5rem;margin-bottom:.5rem;}
@@ -367,6 +370,7 @@ tr[onclick]:hover td{background:#fdf0f5;cursor:pointer;}
         <div class="img-upload-text">點擊上傳圖片<br><span style="font-size:.7rem;opacity:.7;">支援 JPG、PNG、WEBP，可一次選多張</span></div>
       </div>
       <div class="img-preview-list" id="img-preview-list"></div>
+      <div class="img-drag-hint" id="img-drag-hint" style="display:none;">☰ 拖曳圖片可調整順序，第一張為主圖</div>
     </div>
 
     <!-- 規格 -->
@@ -787,7 +791,12 @@ function editProduct(id){
   // 規格
   const specList=document.getElementById('spec-list');
   specList.innerHTML='';
-  (p.specs||[]).forEach(([l,v])=>addSpec(l,v));
+  (p.specs||[]).forEach(s=>{
+    // 兼容舊格式 [label,value] 和新格式 {label,value}
+    const l=Array.isArray(s)?s[0]:s.label||'';
+    const v=Array.isArray(s)?s[1]:s.value||'';
+    addSpec(l,v);
+  });
   if(!(p.specs&&p.specs.length)) addSpec();
   openDrawer(false);
 }
@@ -827,12 +836,42 @@ function compressImage(dataUrl, maxSize, quality, callback){
 }
 function renderImgPreviews(){
   const list=document.getElementById('img-preview-list');
+  const hint=document.getElementById('img-drag-hint');
+  if(hint) hint.style.display=editingImgs.length>1?'block':'none';
   list.innerHTML=editingImgs.map((img,i)=>`
-    <div class="img-preview-item">
+    <div class="img-preview-item" draggable="true" data-idx="${i}"
+      ondragstart="imgDragStart(event,${i})"
+      ondragover="imgDragOver(event)"
+      ondrop="imgDrop(event,${i})"
+      ondragend="imgDragEnd(event)">
       <img src="${img}" alt="">
       <button class="img-del" onclick="removeImg(${i})">✕</button>
       ${i===0?'<div class="img-main-badge">主圖</div>':''}
     </div>`).join('');
+}
+
+let dragSrcIdx=-1;
+function imgDragStart(e,idx){
+  dragSrcIdx=idx;
+  e.currentTarget.classList.add('dragging');
+  e.dataTransfer.effectAllowed='move';
+}
+function imgDragOver(e){
+  e.preventDefault();
+  e.dataTransfer.dropEffect='move';
+  e.currentTarget.classList.add('drag-over');
+}
+function imgDrop(e,toIdx){
+  e.preventDefault();
+  e.currentTarget.classList.remove('drag-over');
+  if(dragSrcIdx===toIdx) return;
+  const moved=editingImgs.splice(dragSrcIdx,1)[0];
+  editingImgs.splice(toIdx,0,moved);
+  renderImgPreviews();
+}
+function imgDragEnd(e){
+  e.currentTarget.classList.remove('dragging');
+  document.querySelectorAll('.img-preview-item').forEach(el=>el.classList.remove('drag-over'));
 }
 function removeImg(i){editingImgs.splice(i,1);renderImgPreviews();}
 
@@ -848,8 +887,8 @@ function addSpec(label='',value=''){
 function getSpecs(){
   return [...document.querySelectorAll('.spec-row')].map(row=>{
     const inputs=row.querySelectorAll('input');
-    return [inputs[0].value.trim(),inputs[1].value.trim()];
-  }).filter(([l,v])=>l||v);
+    return {label:inputs[0].value.trim(), value:inputs[1].value.trim()};
+  }).filter(s=>s.label||s.value);
 }
 
 // ════════════════════════════════════════
@@ -1057,6 +1096,10 @@ window.toggleFeatured=toggleFeatured;
 window.addSpec=addSpec;
 window.handleImgUpload=handleImgUpload;
 window.removeImg=removeImg;
+window.imgDragStart=imgDragStart;
+window.imgDragOver=imgDragOver;
+window.imgDrop=imgDrop;
+window.imgDragEnd=imgDragEnd;
 window.renderTable=renderTable;
 window.handleCatChange=handleCatChange;
 window.renderOrders=renderOrders;

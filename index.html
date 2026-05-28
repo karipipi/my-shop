@@ -712,9 +712,11 @@ function openModal(productId){
   document.getElementById('modal-price').innerHTML=p.oldPrice
     ?`NT$${p.price} <s>NT$${p.oldPrice}</s>`:`NT$${p.price}`;
   document.getElementById('modal-desc').textContent=p.desc||'';
-  document.getElementById('modal-specs').innerHTML=(p.specs||[]).map(([l,v])=>
-    `<div class="modal-spec"><div class="modal-spec-label">${l}</div><div class="modal-spec-value">${v}</div></div>`
-  ).join('');
+  document.getElementById('modal-specs').innerHTML=(p.specs||[]).map(s=>{
+    const l=Array.isArray(s)?s[0]:s.label||'';
+    const v=Array.isArray(s)?s[1]:s.value||'';
+    return `<div class="modal-spec"><div class="modal-spec-label">${l}</div><div class="modal-spec-value">${v}</div></div>`;
+  }).join('');
   document.getElementById('modal-add-btn').onclick=()=>addToCart(productId);
   galleryImgs=p.imgs&&p.imgs.length?p.imgs:[p.emoji||'🌸'];
   galleryIdx=0;
