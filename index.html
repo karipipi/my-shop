@@ -730,9 +730,9 @@ function openModal(productId){
     ?variants.map((v,vi)=>`
       <div class="modal-variant">
         <div class="modal-variant-label">${v.name}：<span id="variant-selected-${vi}" style="color:var(--pink4);">請選擇</span></div>
-        <div class="modal-variant-options">
+        <div class="modal-variant-options" data-group="${vi}">
           ${(v.options||[]).map(opt=>`
-            <button class="variant-btn" onclick="selectVariant(this,${vi},'${opt}')">${opt}</button>
+            <button class="variant-btn" onclick="selectVariant(this,${vi})">${opt}</button>
           `).join('')}
         </div>
       </div>`).join('')
@@ -791,11 +791,10 @@ window.addToCart=addToCart;
 window.changeQty=changeQty;
 window.bannerNav=bannerNav;
 window.setBanner=setBanner;
-window.selectVariant=function(btn, groupIdx, opt){
-  // 取消同群組其他選取
+window.selectVariant=function(btn, groupIdx){
   btn.closest('.modal-variant-options').querySelectorAll('.variant-btn').forEach(b=>b.classList.remove('selected'));
   btn.classList.add('selected');
-  document.getElementById(`variant-selected-${groupIdx}`).textContent=opt;
+  document.getElementById(`variant-selected-${groupIdx}`).textContent=btn.textContent;
 };
 window.queryOrders=window.queryOrders;
 window.openOrderPanel=window.openOrderPanel;
