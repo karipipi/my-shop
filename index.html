@@ -726,17 +726,28 @@ function openModal(productId){
   document.getElementById('modal-add-btn').onclick=()=>addToCart(productId);
   // 可選規格
   const variants=p.variants||[];
-  document.getElementById('modal-variants').innerHTML=variants.length
+  const variantEl=document.getElementById('modal-variants');
+  variantEl.innerHTML=variants.length
     ?variants.map((v,vi)=>`
       <div class="modal-variant">
         <div class="modal-variant-label">${v.name}：<span id="variant-selected-${vi}" style="color:var(--pink4);">請選擇</span></div>
         <div class="modal-variant-options" data-group="${vi}">
-          ${(v.options||[]).map(opt=>`
-            <button class="variant-btn" onclick="selectVariant(this,${vi})">${opt}</button>
-          `).join('')}
+          ${(v.options||[]).map(opt=>`<button class="variant-btn" type="button">${opt}</button>`).join('')}
         </div>
       </div>`).join('')
     :'';
+  // 用事件委派處理點擊
+  variantEl.onclick=function(e){
+    const btn=e.target.closest('.variant-btn');
+    if(!btn) return;
+    const group=btn.closest('.modal-variant-options');
+    if(!group) return;
+    group.querySelectorAll('.variant-btn').forEach(b=>b.classList.remove('selected'));
+    btn.classList.add('selected');
+    const vi=group.dataset.group;
+    const label=document.getElementById('variant-selected-'+vi);
+    if(label) label.textContent=btn.textContent;
+  };
   galleryImgs=p.imgs&&p.imgs.length?p.imgs:[p.emoji||'🌸'];
   galleryIdx=0;
   renderGallery();
