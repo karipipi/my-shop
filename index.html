@@ -231,7 +231,7 @@ nav{background:#ffffff;border-bottom:1.5px solid var(--border);position:sticky;t
 <div class="banner">🌸 滿1200元免運・新品持續上架・歡迎追蹤 🌸</div>
 <nav>
   <div class="nav-inner">
-    <div class="logo"><img src="sakura-cat-logo.svg" class="logo-mark" alt="櫻花喵"> 櫻花喵小舖</div>
+    <div class="logo" onclick="show('home')" style="cursor:pointer;"><img src="sakura-cat-logo.svg" class="logo-mark" alt="櫻花喵"> 櫻花喵小舖</div>
     <ul class="nav-links">
       <li><a href="javascript:void(0)" onclick="show('home')">首頁</a></li>
       <li><a href="javascript:void(0)" onclick="show('shop')">商品</a></li>
@@ -649,7 +649,18 @@ function addToCart(productId, variantIdx=null){
   const p=products.find(x=>x.id===productId);
   if(!p) return;
   if(p.variants&&p.variants.length&&variantIdx===null){
-    alert('請先選擇款式');return;
+    // 顯示提示訊息
+    const toastEl=document.getElementById('toast');
+    const orig=toastEl.textContent;
+    const origBg=toastEl.style.background;
+    toastEl.textContent='⚠ 請先選擇款式';
+    toastEl.style.background='#e65100';
+    toastEl.classList.add('show');
+    setTimeout(()=>{
+      toastEl.classList.remove('show');
+      toastEl.style.background='';
+    },2200);
+    return;
   }
   const variant=variantIdx!==null&&p.variants?p.variants[variantIdx]:null;
   const price=parseInt(variant?.price)||p.price;
