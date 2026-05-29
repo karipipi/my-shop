@@ -851,7 +851,13 @@ function compressImage(dataUrl, maxSize, quality, callback){
     const canvas=document.createElement('canvas');
     canvas.width=w; canvas.height=h;
     canvas.getContext('2d').drawImage(img,0,0,w,h);
-    callback(canvas.toDataURL('image/jpeg', quality));
+    const result=canvas.toDataURL('image/jpeg', quality);
+    // 如果還是太大，繼續壓縮
+    if(result.length>200000 && quality>0.3){
+      compressImage(dataUrl, Math.round(maxSize*0.8), quality-0.1, callback);
+    } else {
+      callback(result);
+    }
   };
   img.src=dataUrl;
 }
@@ -943,10 +949,11 @@ function handleVariantImg(e,id){
     img.onload=()=>{
       const c=document.createElement('canvas');
       let w=img.width,h=img.height;
-      if(w>400){h=Math.round(h*400/w);w=400;}
+      // 款式縮圖壓很小，只需要 200px
+      if(w>200){h=Math.round(h*200/w);w=200;}
       c.width=w;c.height=h;
       c.getContext('2d').drawImage(img,0,0,w,h);
-      const data=c.toDataURL('image/jpeg',0.75);
+      const data=c.toDataURL('image/jpeg',0.6);
       variantImgs[id]=data;
       const preview=document.getElementById('vimg-preview-'+id);
       if(preview){
@@ -1017,6 +1024,12 @@ async function saveProduct(){
   };
 
   try{
+    // 檢查資料大小
+    const dataStr=JSON.stringify(product);
+    if(dataStr.length>800000){
+      toast('❌ 圖片太大，請減少圖片數量或款式圖片','error');
+      return;
+    }
     await saveProduct_db(product, editId||null);
     closeDrawer();
     toast(editId?'✓ 商品已更新':'✓ 商品已新增');
