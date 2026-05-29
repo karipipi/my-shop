@@ -130,8 +130,9 @@ nav{background:#ffffff;border-bottom:1.5px solid var(--border);position:sticky;t
 .summary-total{display:flex;justify-content:space-between;font-size:1rem;font-weight:500;color:var(--pink4);padding-top:.8rem;border-top:1.5px solid var(--border);}
 .checkout-btn{width:100%;background:var(--pink4);color:#ffffff;border:none;border-radius:12px;padding:.8rem;font-size:.92rem;cursor:pointer;font-family:inherit;margin-top:1rem;transition:background .2s;}
 .checkout-btn:hover{background:#9a4a65;}
-.toast{position:fixed;bottom:2rem;right:2rem;background:var(--pink4);color:#ffffff;padding:.7rem 1.4rem;border-radius:12px;font-size:.85rem;transform:translateY(60px);opacity:0;transition:all .35s;z-index:999;}
+.toast{position:fixed;bottom:5rem;right:1.2rem;background:#fff;color:var(--text);padding:.8rem 1.2rem;border-radius:14px;font-size:.88rem;transform:translateY(20px);opacity:0;transition:all .3s cubic-bezier(.32,.72,0,1);z-index:999;box-shadow:0 4px 20px rgba(0,0,0,.15);border-left:4px solid var(--pink4);display:flex;align-items:center;gap:.6rem;max-width:260px;}
 .toast.show{transform:translateY(0);opacity:1;}
+.toast-error{border-left-color:#e65100;}
 /* ── 商品詳情 Modal ── */
 .modal-backdrop{position:fixed;inset:0;background:rgba(40,15,25,.45);z-index:500;opacity:0;pointer-events:none;transition:opacity .3s;}
 .modal-backdrop.open{opacity:1;pointer-events:all;}
@@ -533,7 +534,7 @@ nav{background:#ffffff;border-bottom:1.5px solid var(--border);position:sticky;t
   </button>
 </div>
 
-<div class="toast" id="toast">✓ 已加入購物車！</div>
+<div class="toast" id="toast"><span id="toast-icon">🛒</span><span id="toast-msg">已加入購物車！</span></div>
 
 <script type="module">
 // ════════════════════════════════════════
@@ -649,17 +650,7 @@ function addToCart(productId, variantIdx=null){
   const p=products.find(x=>x.id===productId);
   if(!p) return;
   if(p.variants&&p.variants.length&&variantIdx===null){
-    // 顯示提示訊息
-    const toastEl=document.getElementById('toast');
-    const orig=toastEl.textContent;
-    const origBg=toastEl.style.background;
-    toastEl.textContent='⚠ 請先選擇款式';
-    toastEl.style.background='#e65100';
-    toastEl.classList.add('show');
-    setTimeout(()=>{
-      toastEl.classList.remove('show');
-      toastEl.style.background='';
-    },2200);
+    showToast('請先選擇款式','⚠',true);
     return;
   }
   const variant=variantIdx!==null&&p.variants?p.variants[variantIdx]:null;
@@ -671,7 +662,7 @@ function addToCart(productId, variantIdx=null){
   if(existing) existing.qty++;
   else cart.push({cartKey, id:productId, name, price, imgs:img?[img]:p.imgs||[], qty:1});
   updateCartCount();
-  showToast();
+  showToast(`已加入：${name}`, '✓');
 }
 function updateCartCount(){
   const count=cart.reduce((s,x)=>s+x.qty,0);
@@ -716,7 +707,16 @@ function updateCartSummary(){
   document.getElementById('cart-shipping').textContent=ship===0?'免運':`NT$${ship}`;
   document.getElementById('cart-total').textContent=`NT$${sub+ship}`;
 }
-function showToast(){const t=document.getElementById('toast');t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200);}
+function showToast(msg='已加入購物車！', icon='🛒', isError=false){
+  const t=document.getElementById('toast');
+  document.getElementById('toast-icon').textContent=icon;
+  document.getElementById('toast-msg').textContent=msg;
+  if(isError){t.classList.add('toast-error');}
+  else{t.classList.remove('toast-error');}
+  t.classList.add('show');
+  clearTimeout(window._toastTimer);
+  window._toastTimer=setTimeout(()=>t.classList.remove('show'),2500);
+}
 
 // ════════════════════════════════════════
 // 渲染商品卡片
@@ -861,7 +861,10 @@ function openModal(productId){
         const price=parseInt(v.price)||p.price;
         priceEl.innerHTML=p.oldPrice?`NT$${price} <s>NT$${p.oldPrice}</s>`:`NT$${price}`;
       }
-      document.getElementById('modal-add-btn').onclick=()=>addToCart(productId,idx);
+      // 更新加入購物車按鈕，用 data 屬性記住選擇
+      const addBtn=document.getElementById('modal-add-btn');
+      addBtn.dataset.selectedIdx=idx;
+      addBtn.onclick=function(){addToCart(productId, parseInt(this.dataset.selectedIdx));};
     };
   } else {
     variantEl.innerHTML='';
