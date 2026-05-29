@@ -94,8 +94,21 @@ nav{background:#ffffff;border-bottom:1.5px solid var(--border);position:sticky;t
 .form-group input,.form-group textarea,.form-group select{width:100%;border:1.5px solid var(--border);border-radius:10px;padding:.6rem .9rem;font-size:.88rem;font-family:inherit;color:var(--text);background:var(--cream);outline:none;transition:border-color .2s;}
 .form-group input:focus,.form-group textarea:focus{border-color:var(--pink3);}
 .form-group textarea{height:100px;resize:none;}
-.contact-links{display:flex;gap:1rem;justify-content:center;margin-top:1.5rem;flex-wrap:wrap;}
-.contact-link{display:flex;align-items:center;gap:.4rem;color:var(--pink4);font-size:.85rem;text-decoration:none;background:var(--pink);border-radius:20px;padding:.4rem 1rem;}
+/* ── 浮動聯絡按鈕 ── */
+.float-contact{position:fixed;bottom:2rem;right:2rem;z-index:400;display:flex;flex-direction:column;align-items:flex-end;gap:.6rem;}
+.float-contact-btn{width:56px;height:56px;border-radius:50%;background:var(--pink4);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(184,92,120,.35);transition:all .2s;flex-shrink:0;}
+.float-contact-btn:hover{background:#9a4a65;transform:scale(1.08);}
+.float-contact-btn svg{width:26px;height:26px;fill:#fff;}
+.float-contact-menu{display:flex;flex-direction:column;gap:.5rem;align-items:flex-end;opacity:0;pointer-events:none;transform:translateY(10px);transition:all .25s;}
+.float-contact-menu.open{opacity:1;pointer-events:all;transform:translateY(0);}
+.float-contact-item{display:flex;align-items:center;gap:.6rem;background:#fff;border-radius:24px;padding:.5rem 1rem .5rem .8rem;box-shadow:0 2px 12px rgba(0,0,0,.12);text-decoration:none;color:var(--text);font-size:.88rem;white-space:nowrap;transition:box-shadow .2s;}
+.float-contact-item:hover{box-shadow:0 4px 16px rgba(0,0,0,.18);}
+.float-contact-item .fc-icon{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;}
+@media(max-width:768px){
+  .float-contact{bottom:1.2rem;right:1.2rem;}
+  .float-contact-btn{width:50px;height:50px;}
+  .float-contact-item{font-size:.82rem;padding:.45rem .9rem .45rem .7rem;}
+}
 .checkout-layout{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;max-width:900px;margin:0 auto;}
 .cart-items{background:#ffffff;border-radius:16px;border:1px solid var(--border);padding:1.5rem;}
 .cart-item{display:flex;align-items:center;gap:1rem;padding:.8rem 0;border-bottom:1px solid var(--border);}
@@ -348,12 +361,6 @@ nav{background:#ffffff;border-bottom:1.5px solid var(--border);position:sticky;t
       <div class="form-group"><label>詢問類型</label><select id="contact-type"><option>商品詢問</option><option>訂單問題</option><option>退換貨</option><option>其他</option></select></div>
       <div class="form-group"><label>訊息內容</label><textarea id="contact-msg" placeholder="請輸入您的問題..."></textarea></div>
       <button class="btn-primary" style="width:100%;" onclick="sendContactEmail()">送出訊息 →</button>
-      <div class="contact-links">
-        <a class="contact-link" href="https://tw.shp.ee/kUtALvpZ" target="_blank">🛍 蝦皮賣場</a>
-        <a class="contact-link" href="https://www.instagram.com/meow.meow.sakura?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==" target="_blank">📷 Instagram</a>
-        <a class="contact-link" href="tel:0958792070">📞 0958-792-070</a>
-        <a class="contact-link" href="/cdn-cgi/l/email-protection#3a5b57545f49535b0d0a0f0a0e7a5d575b535614595557" target="_blank">✉️ 聯絡我們</a>
-      </div>
     </div>
   </div>
 </div>
@@ -490,6 +497,32 @@ nav{background:#ffffff;border-bottom:1.5px solid var(--border);position:sticky;t
     <button class="modal-add-btn" id="modal-add-btn">加入購物車 +</button>
   </div>
 </div>
+<!-- 浮動聯絡按鈕 -->
+<div class="float-contact" id="float-contact">
+  <div class="float-contact-menu" id="float-contact-menu">
+    <a class="float-contact-item" href="https://tw.shp.ee/kUtALvpZ" target="_blank">
+      <div class="fc-icon" style="background:#ee4d2d;">🛍</div> 蝦皮賣場
+    </a>
+    <a class="float-contact-item" href="https://www.instagram.com/meow.meow.sakura?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==" target="_blank">
+      <div class="fc-icon" style="background:linear-gradient(135deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);">📷</div> Instagram
+    </a>
+    <a class="float-contact-item" href="tel:0958792070">
+      <div class="fc-icon" style="background:#2e7d32;">📞</div> 0958-792-070
+    </a>
+    <a class="float-contact-item" href="mailto:amnesia70504@gmail.com">
+      <div class="fc-icon" style="background:var(--pink4);">✉️</div> 發送 Email
+    </a>
+    <a class="float-contact-item" href="#" onclick="show('contact');toggleFloatContact();return false;">
+      <div class="fc-icon" style="background:var(--pink3);">💬</div> 聯絡表單
+    </a>
+  </div>
+  <button class="float-contact-btn" onclick="toggleFloatContact()" title="聯絡我們">
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path d="M20 2H4C2.9 2 2 2.9 2 4v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/>
+    </svg>
+  </button>
+</div>
+
 <div class="toast" id="toast">✓ 已加入購物車！</div>
 
 <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script type="module">
@@ -856,7 +889,17 @@ window.closeOrderPanel=window.closeOrderPanel;
 document.getElementById('query-email')?.addEventListener('keydown',e=>{
   if(e.key==='Enter') window.queryOrders();
 });
-window.toggleMobileMenu=function(){
+window.toggleFloatContact=function(){
+  const menu=document.getElementById('float-contact-menu');
+  menu.classList.toggle('open');
+};
+// 點其他地方關閉
+document.addEventListener('click',function(e){
+  const fc=document.getElementById('float-contact');
+  if(fc&&!fc.contains(e.target)){
+    document.getElementById('float-contact-menu')?.classList.remove('open');
+  }
+});
   document.getElementById('mobile-menu').classList.toggle('open');
 };
 window.goToOrderForm=function(){
