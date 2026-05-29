@@ -620,7 +620,7 @@ function addToCart(productId, variantIdx=null){
     alert('請先選擇款式');return;
   }
   const variant=variantIdx!==null&&p.variants?p.variants[variantIdx]:null;
-  const price=variant?.price||p.price;
+  const price=parseInt(variant?.price)||p.price;
   const name=variant?`${p.name}（${variant.name}）`:p.name;
   const img=variant?.img||(p.imgs&&p.imgs[0])||'';
   const cartKey=variant?`${productId}_${variantIdx}`:productId;
@@ -678,7 +678,10 @@ function showToast(){const t=document.getElementById('toast');t.classList.add('s
 const CAT_LABEL={dress:'娃衣',blind:'盲盒',acc:'配件',sale:'特價'};
 function getPriceDisplay(p){
   const variants=p.variants||[];
-  const variantPrices=variants.filter(v=>v.price&&v.stock!=='售完').map(v=>v.price);
+  const variantPrices=variants
+    .filter(v=>v.price&&v.stock!=='售完')
+    .map(v=>parseInt(v.price)||0)
+    .filter(v=>v>0);
   if(variantPrices.length===0) return p.oldPrice?`NT$${p.price} <s>NT$${p.oldPrice}</s>`:`NT$${p.price}`;
   const min=Math.min(...variantPrices);
   const max=Math.max(...variantPrices);
@@ -790,13 +793,13 @@ function openModal(productId){
       const v=variants[idx];
       const info=document.getElementById('modal-variant-info');
       if(info){
-        const price=v.price||p.price;
+        const price=parseInt(v.price)||p.price;
         info.textContent=`已選：${v.name}　NT$${price}　${v.stock}`;
       }
       // 更新價格顯示
       const priceEl=document.getElementById('modal-price');
       if(priceEl){
-        const price=v.price||p.price;
+        const price=parseInt(v.price)||p.price;
         priceEl.innerHTML=p.oldPrice?`NT$${price} <s>NT$${p.oldPrice}</s>`:`NT$${price}`;
       }
       // 更新加入購物車

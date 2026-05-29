@@ -573,8 +573,14 @@ function getProducts(){ return _products; }
 function getOrders(){ return _orders; }
 
 async function saveProduct_db(product, id){
-  if(id){ await setDoc(doc(db,'products',id), product); }
-  else { await addDoc(collection(db,'products'), {...product, createdAt: serverTimestamp()}); }
+  if(id){
+    // 編輯時用 merge:false 但保留 createdAt
+    const existing=_products.find(p=>p.id===id);
+    const data={...product, createdAt: existing?.createdAt||serverTimestamp()};
+    await setDoc(doc(db,'products',id), data);
+  } else {
+    await addDoc(collection(db,'products'), {...product, createdAt: serverTimestamp()});
+  }
 }
 async function deleteProduct_db(id){ await deleteDoc(doc(db,'products',id)); }
 async function updateFeatured_db(id, featured){ await setDoc(doc(db,'products',id), {featured}, {merge:true}); }
