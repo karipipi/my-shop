@@ -26,6 +26,11 @@ nav{background:#ffffff;border-bottom:1.5px solid var(--border);position:sticky;t
 .nav-cart:hover{background:#9a4a65;}
 .hamburger{display:none;flex-direction:column;gap:5px;background:none;border:none;cursor:pointer;padding:.3rem;}
 .hamburger span{display:block;width:24px;height:2px;background:var(--pink4);border-radius:2px;transition:all .3s;}
+/* 手機購物車圖示 */
+.mobile-cart-icon{display:none;position:relative;background:none;border:none;cursor:pointer;padding:.3rem;color:var(--pink4);}
+.mobile-cart-icon svg{width:28px;height:28px;}
+.mobile-cart-badge{position:absolute;top:-4px;right:-6px;background:var(--pink4);color:#fff;font-size:.65rem;font-weight:700;border-radius:10px;min-width:18px;height:18px;display:none;align-items:center;justify-content:center;padding:0 4px;line-height:1;}
+.mobile-cart-badge.has-items{display:flex;}
 .mobile-menu{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(255,255,255,.97);z-index:300;flex-direction:column;align-items:center;justify-content:center;gap:2rem;}
 .mobile-menu.open{display:flex;}
 .mobile-menu a{font-family:'Noto Serif TC',serif;font-size:1.4rem;color:var(--pink4);text-decoration:none;letter-spacing:.1em;}
@@ -190,6 +195,7 @@ nav{background:#ffffff;border-bottom:1.5px solid var(--border);position:sticky;t
   .nav-links{display:none;}
   .nav-cart{display:none;}
   .hamburger{display:flex;}
+  .mobile-cart-icon{display:flex;}
   .page{padding:1rem;}
   .checkout-layout{grid-template-columns:1fr;}
   .hero{padding:2rem 1.2rem;}
@@ -234,6 +240,13 @@ nav{background:#ffffff;border-bottom:1.5px solid var(--border);position:sticky;t
     </ul>
     <div style="display:flex;align-items:center;gap:.8rem;">
       <button class="nav-cart" onclick="show('checkout')">🛒 購物車 <span id="cart-count">0</span></button>
+      <!-- 手機版購物車圖示 -->
+      <button class="mobile-cart-icon" onclick="show('checkout')" aria-label="購物車">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/>
+        </svg>
+        <span class="mobile-cart-badge" id="cart-count-mobile">0</span>
+      </button>
       <button class="hamburger" id="hamburger-btn" onclick="toggleMobileMenu()">
         <span></span><span></span><span></span>
       </button>
@@ -296,7 +309,6 @@ nav{background:#ffffff;border-bottom:1.5px solid var(--border);position:sticky;t
   <a href="javascript:void(0)" onclick="show('shop');toggleMobileMenu()">商品</a>
   <a href="javascript:void(0)" onclick="show('about');toggleMobileMenu()">關於我們</a>
   <a href="javascript:void(0)" onclick="show('myorders');toggleMobileMenu()">我的訂單</a>
-  <button class="mobile-cart" onclick="show('checkout');toggleMobileMenu()">🛒 購物車 <span id="cart-count-mobile">0</span></button>
 </div>
 <!-- HOME BANNER（獨立全寬區塊，在 .page 外）-->
 <div id="home-banner-zone" style="display:none;width:100%;position:relative;z-index:1;">
@@ -653,8 +665,11 @@ function addToCart(productId, variantIdx=null){
 function updateCartCount(){
   const count=cart.reduce((s,x)=>s+x.qty,0);
   document.getElementById('cart-count').textContent=count;
-  const m=document.getElementById('cart-count-mobile');
-  if(m) m.textContent=count;
+  const badge=document.getElementById('cart-count-mobile');
+  if(badge){
+    badge.textContent=count>0?count:'';
+    badge.classList.toggle('has-items', count>0);
+  }
 }
 function renderCart(){
   const el=document.getElementById('cart-list');
@@ -741,15 +756,30 @@ function renderShop(){
 // ════════════════════════════════════════
 // 頁面切換
 // ════════════════════════════════════════
-function show(id){
+function show(id, pushState=true){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   window.scrollTo(0,0);
-  // Banner 只在首頁顯示
   const bannerZone=document.getElementById('home-banner-zone');
   if(bannerZone) bannerZone.style.display=id==='home'?'block':'none';
   if(id==='checkout') renderCart();
+  if(pushState) history.pushState({page:id}, '', '#'+id);
 }
+
+// 瀏覽器返回/前進鍵
+window.addEventListener('popstate', function(e){
+  const id=e.state?.page||(location.hash.replace('#','')||'home');
+  const validPages=['home','shop','about','contact','myorders','checkout','orderform','orderdetail'];
+  show(validPages.includes(id)?id:'home', false);
+});
+
+// 初始載入時根據網址 hash 決定頁面
+(function(){
+  const hash=location.hash.replace('#','');
+  const validPages=['home','shop','about','contact','myorders','checkout'];
+  if(hash&&validPages.includes(hash)) show(hash, false);
+  else history.replaceState({page:'home'},'','#home');
+})();
 
 // ════════════════════════════════════════
 // 分類篩選
