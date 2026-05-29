@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>櫻花喵小舖</title>
+<link rel="icon" type="image/svg+xml" href="sakura-cat-logo.svg">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@300;400;500&family=Zen+Maru+Gothic:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
@@ -17,6 +18,7 @@ nav{background:#ffffff;border-bottom:1.5px solid var(--border);position:sticky;t
 .nav-inner{max-width:100%;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:70px;position:relative;}
 .logo{font-family:'Noto Serif TC',serif;font-size:1.6rem;font-weight:500;color:var(--pink4);letter-spacing:.08em;display:flex;align-items:center;gap:.5rem;}
 .logo span{font-size:1.7rem;}
+.logo-mark{width:42px;height:42px;display:block;flex-shrink:0;}
 .nav-links{display:flex;gap:2.5rem;list-style:none;position:absolute;left:50%;transform:translateX(-50%);}
 .nav-links a{text-decoration:none;color:var(--text2);font-size:1rem;letter-spacing:.06em;transition:color .2s;}
 .nav-links a:hover{color:var(--pink4);}
@@ -164,6 +166,7 @@ nav{background:#ffffff;border-bottom:1.5px solid var(--border);position:sticky;t
   .nav-inner{height:56px;}
   .logo{font-size:1.15rem;}
   .logo span{font-size:1.25rem;}
+  .logo-mark{width:32px;height:32px;}
   .nav-links{display:none;}
   .nav-cart{display:none;}
   .hamburger{display:flex;}
@@ -202,7 +205,7 @@ nav{background:#ffffff;border-bottom:1.5px solid var(--border);position:sticky;t
 <div class="banner">🌸 滿1200元免運・新品持續上架・歡迎追蹤 🌸</div>
 <nav>
   <div class="nav-inner">
-    <div class="logo"><span>🐱</span> 櫻花喵小舖</div>
+    <div class="logo"><img src="sakura-cat-logo.svg" class="logo-mark" alt="櫻花喵"> 櫻花喵小舖</div>
     <ul class="nav-links">
       <li><a href="#" onclick="show('home')">首頁</a></li>
       <li><a href="#" onclick="show('shop')">商品</a></li>
@@ -322,7 +325,7 @@ nav{background:#ffffff;border-bottom:1.5px solid var(--border);position:sticky;t
       </div>
       <div style="margin-top:1.4rem;padding-top:1.2rem;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:.6rem;align-items:center;">
         <a href="tel:0958792070" style="display:flex;align-items:center;gap:.5rem;color:var(--text2);font-size:.88rem;text-decoration:none;">📞 0958-792-070</a>
-        <a href="mailto:amnesia70504@gmail.com" style="display:flex;align-items:center;gap:.5rem;color:var(--text2);font-size:.88rem;text-decoration:none;">✉️ amnesia70504@gmail.com</a>
+        <a href="/cdn-cgi/l/email-protection#26474b4843554f47111613161266414b474f4a0845494b" style="display:flex;align-items:center;gap:.5rem;color:var(--text2);font-size:.88rem;text-decoration:none;">✉️ <span class="__cf_email__" data-cfemail="5534383b30263c346265606561153238343c397b363a38">[email&#160;protected]</span></a>
       </div>
     </div>
   </div>
@@ -342,7 +345,7 @@ nav{background:#ffffff;border-bottom:1.5px solid var(--border);position:sticky;t
         <a class="contact-link" href="https://tw.shp.ee/kUtALvpZ" target="_blank">🛍 蝦皮賣場</a>
         <a class="contact-link" href="https://www.instagram.com/meow.meow.sakura?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==" target="_blank">📷 Instagram</a>
         <a class="contact-link" href="tel:0958792070">📞 0958-792-070</a>
-        <a class="contact-link" href="mailto:amnesia70504@gmail.com" target="_blank">✉️ 聯絡我們</a>
+        <a class="contact-link" href="/cdn-cgi/l/email-protection#4b2a26252e38222a7c7b7e7b7f0b2c262a222765282426" target="_blank">✉️ 聯絡我們</a>
       </div>
     </div>
   </div>
@@ -482,7 +485,7 @@ nav{background:#ffffff;border-bottom:1.5px solid var(--border);position:sticky;t
 </div>
 <div class="toast" id="toast">✓ 已加入購物車！</div>
 
-<script type="module">
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script type="module">
 // ════════════════════════════════════════
 // Firebase 設定
 // ════════════════════════════════════════
