@@ -4,25 +4,23 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>櫻花喵小舖</title>
-<link rel="icon" type="image/svg+xml" href="sakura-cat-logo.svg">
-<link href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC:wght@400;700&family=Noto+Serif+TC:wght@300;400;500&family=Zen+Maru+Gothic:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@300;400;500&family=Zen+Maru+Gothic:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
 :root{
   --pink:#f9e8ee;--pink2:#f0c6d6;--pink3:#d4829b;--pink4:#b85c78;
   --cream:#fdf8f5;--text:#3a2a30;--text2:#7a5a65;--white:#ffffff;--border:#edd5df;
 }
-body{font-family:'Zen Maru Gothic',sans-serif;background:var(--cream) url('sakuracat.png') center 85%/100% no-repeat fixed;color:var(--text);min-height:100vh;}
-.banner{background:#b85c78;color:#ffffff;text-align:center;padding:.5rem;font-size:.8rem;letter-spacing:.06em;position:relative;z-index:200;}
+body{font-family:'Zen Maru Gothic',sans-serif;background:var(--cream) url('sakuracat.png') center 85%/100% no-repeat fixed;color:var(--text);min-height:100vh;font-size:16px;}
+.banner{background:#b85c78;color:#ffffff;text-align:center;padding:.5rem;font-size:.9rem;letter-spacing:.06em;position:relative;z-index:200;}
 nav{background:#ffffff;border-bottom:1.5px solid var(--border);position:sticky;top:0;z-index:200;padding:0 3rem;}
 .nav-inner{max-width:100%;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:70px;position:relative;}
-.logo{font-family:'LXGW WenKai TC','Noto Serif TC',serif;font-size:1.7rem;font-weight:700;color:var(--pink4);letter-spacing:.06em;display:flex;align-items:center;gap:.5rem;}
+.logo{font-family:'Noto Serif TC',serif;font-size:1.6rem;font-weight:500;color:var(--pink4);letter-spacing:.08em;display:flex;align-items:center;gap:.5rem;}
 .logo span{font-size:1.7rem;}
-.logo-mark{width:42px;height:42px;display:block;flex-shrink:0;}
 .nav-links{display:flex;gap:2.5rem;list-style:none;position:absolute;left:50%;transform:translateX(-50%);}
-.nav-links a{text-decoration:none;color:var(--text2);font-size:1rem;letter-spacing:.06em;transition:color .2s;}
+.nav-links a{text-decoration:none;color:var(--text2);font-size:1.05rem;letter-spacing:.06em;transition:color .2s;}
 .nav-links a:hover{color:var(--pink4);}
-.nav-cart{background:var(--pink4);color:var(--white);border:none;border-radius:20px;padding:.6rem 1.6rem;font-size:1rem;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:.4rem;transition:background .2s;}
+.nav-cart{background:var(--pink4);color:var(--white);border:none;border-radius:20px;padding:.6rem 1.6rem;font-size:1.05rem;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:.4rem;transition:background .2s;}
 .nav-cart:hover{background:#9a4a65;}
 .hamburger{display:none;flex-direction:column;gap:5px;background:none;border:none;cursor:pointer;padding:.3rem;}
 .hamburger span{display:block;width:24px;height:2px;background:var(--pink4);border-radius:2px;transition:all .3s;}
@@ -65,19 +63,19 @@ nav{background:#ffffff;border-bottom:1.5px solid var(--border);position:sticky;t
 .btn-primary:hover{background:#9a4a65;transform:translateY(-1px);}
 .btn-outline{background:transparent;color:var(--pink4);border:1.5px solid var(--pink3);border-radius:25px;padding:.7rem 1.8rem;font-size:.9rem;cursor:pointer;font-family:inherit;transition:all .2s;}
 .btn-outline:hover{background:var(--pink);transform:translateY(-1px);}
-.section-title{font-family:'Noto Serif TC',serif;font-size:1.3rem;font-weight:500;color:var(--pink4);text-align:center;margin-bottom:.4rem;}
-.section-sub{text-align:center;color:var(--text2);font-size:.85rem;margin-bottom:1.8rem;}
+.section-title{font-family:'Noto Serif TC',serif;font-size:1.4rem;font-weight:500;color:var(--pink4);text-align:center;margin-bottom:.4rem;}
+.section-sub{text-align:center;color:var(--text2);font-size:.95rem;margin-bottom:1.8rem;}
 .product-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1.2rem;margin-bottom:2.5rem;}
 .product-card{background:#ffffff;border-radius:16px;border:1px solid var(--border);overflow:hidden;transition:all .25s;cursor:pointer;}
 .product-card:hover{transform:translateY(-4px);box-shadow:0 8px 24px rgba(180,100,130,.12);}
 .product-img{width:100%;aspect-ratio:1;background:linear-gradient(145deg,var(--pink) 0%,var(--pink2) 100%);display:flex;align-items:center;justify-content:center;font-size:3.5rem;overflow:hidden;}
 .product-img img{width:100%;height:100%;object-fit:cover;}
 .product-info{padding:1rem;background:#ffffff;}
-.product-tag{display:inline-block;background:var(--pink);color:var(--pink4);font-size:.7rem;border-radius:10px;padding:.15rem .6rem;margin-bottom:.4rem;}
-.product-name{font-size:.9rem;font-weight:500;color:var(--text);margin-bottom:.3rem;}
-.product-price{color:var(--pink4);font-size:1rem;font-weight:500;}
-.product-price s{color:var(--text2);font-size:.8rem;margin-left:.4rem;font-weight:400;}
-.add-btn{width:100%;background:var(--pink);border:none;border-radius:0 0 16px 16px;color:var(--pink4);padding:.5rem;font-size:.82rem;cursor:pointer;font-family:inherit;transition:background .2s;margin-top:.6rem;}
+.product-tag{display:inline-block;background:var(--pink);color:var(--pink4);font-size:.82rem;border-radius:10px;padding:.15rem .6rem;margin-bottom:.4rem;}
+.product-name{font-size:1rem;font-weight:500;color:var(--text);margin-bottom:.3rem;}
+.product-price{color:var(--pink4);font-size:1.05rem;font-weight:500;}
+.product-price s{color:var(--text2);font-size:.88rem;margin-left:.4rem;font-weight:400;}
+.add-btn{width:100%;background:var(--pink);border:none;border-radius:0 0 16px 16px;color:var(--pink4);padding:.55rem;font-size:.9rem;cursor:pointer;font-family:inherit;transition:background .2s;margin-top:.6rem;}
 .add-btn:hover{background:var(--pink2);}
 .cat-tabs{display:flex;gap:.6rem;margin-bottom:1.5rem;flex-wrap:wrap;justify-content:center;}
 .cat-tab{background:#ffffff;border:1.5px solid var(--border);border-radius:20px;padding:.4rem 1.1rem;font-size:.82rem;cursor:pointer;font-family:inherit;color:var(--text2);transition:all .2s;}
@@ -139,34 +137,37 @@ nav{background:#ffffff;border-bottom:1.5px solid var(--border);position:sticky;t
 .gallery-thumb.active{border-color:var(--pink4);}
 .gallery-thumb img{width:100%;height:100%;object-fit:cover;}
 .modal-variant{margin-bottom:1rem;}
-.modal-variant-label{font-size:.82rem;font-weight:500;color:var(--text);margin-bottom:.5rem;}
-.modal-variant-options{display:flex;flex-wrap:wrap;gap:.5rem;}
-.variant-btn{background:var(--cream);border:1.5px solid var(--border);border-radius:8px;padding:.35rem .8rem;font-size:.82rem;cursor:pointer;font-family:inherit;color:var(--text);transition:all .2s;}
-.variant-btn:hover{border-color:var(--pink3);}
-.variant-btn.selected{background:var(--pink4);border-color:var(--pink4);color:#fff;}
-.modal-product-name{font-family:'Noto Serif TC',serif;font-size:1.4rem;font-weight:500;color:var(--text);margin-bottom:.4rem;}
-.modal-product-price{color:var(--pink4);font-size:1.3rem;font-weight:500;margin-bottom:1rem;}
-.modal-product-price s{color:var(--text2);font-size:.95rem;margin-left:.5rem;font-weight:400;}
+.modal-variant-label{font-size:.88rem;font-weight:500;color:var(--text);margin-bottom:.6rem;}
+.modal-variant-options{display:flex;flex-wrap:wrap;gap:.6rem;}
+.variant-btn{background:var(--cream);border:1.5px solid var(--border);border-radius:10px;padding:.45rem .9rem;font-size:.88rem;cursor:pointer;font-family:inherit;color:var(--text);transition:all .2s;display:flex;align-items:center;}
+.variant-btn:hover:not(:disabled){border-color:var(--pink3);}
+.variant-btn.selected{background:var(--pink);border-color:var(--pink4);color:var(--pink4);}
+.variant-btn:disabled{opacity:.45;cursor:not-allowed;}
+.variant-stock-badge{font-size:.68rem;border-radius:4px;padding:.1rem .4rem;margin-left:.4rem;}
+.variant-stock-badge.preorder{background:#fff3e0;color:#e65100;}
+.variant-stock-badge.soldout{background:#fdecea;color:#c62828;}
+.modal-product-name{font-family:'Noto Serif TC',serif;font-size:1.5rem;font-weight:500;color:var(--text);margin-bottom:.4rem;}
+.modal-product-price{color:var(--pink4);font-size:1.4rem;font-weight:500;margin-bottom:1rem;}
+.modal-product-price s{color:var(--text2);font-size:1rem;margin-left:.5rem;font-weight:400;}
 .modal-divider{border:none;border-top:1px solid var(--border);margin:1rem 0;}
-.modal-desc-title{font-size:.85rem;font-weight:500;color:var(--text);margin-bottom:.5rem;}
-.modal-desc{font-size:.88rem;color:var(--text2);line-height:2;}
+.modal-desc-title{font-size:1rem;font-weight:500;color:var(--text);margin-bottom:.5rem;}
+.modal-desc{font-size:.95rem;color:var(--text2);line-height:2.1;}
 .modal-specs{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin-top:.8rem;}
 .modal-spec{background:var(--cream);border-radius:10px;padding:.6rem .8rem;}
-.modal-spec-label{font-size:.72rem;color:var(--text2);margin-bottom:.15rem;}
-.modal-spec-value{font-size:.85rem;color:var(--text);font-weight:500;}
+.modal-spec-label{font-size:.82rem;color:var(--text2);margin-bottom:.15rem;}
+.modal-spec-value{font-size:.95rem;color:var(--text);font-weight:500;}
 .modal-actions{padding:1.2rem 1.5rem;border-top:1px solid var(--border);display:flex;gap:.8rem;background:#ffffff;position:sticky;bottom:0;}
-.modal-add-btn{flex:1;background:var(--pink4);color:#ffffff;border:none;border-radius:12px;padding:.75rem;font-size:.92rem;cursor:pointer;font-family:inherit;transition:background .2s;}
+.modal-add-btn{flex:1;background:var(--pink4);color:#ffffff;border:none;border-radius:12px;padding:.85rem;font-size:1rem;cursor:pointer;font-family:inherit;transition:background .2s;}
 .modal-add-btn:hover{background:#9a4a65;}
-.modal-wish-btn{background:var(--pink);border:1.5px solid var(--border);border-radius:12px;padding:.75rem 1rem;font-size:1rem;cursor:pointer;transition:background .2s;}
+.modal-wish-btn{background:var(--pink);border:1.5px solid var(--border);border-radius:12px;padding:.85rem 1rem;font-size:1.1rem;cursor:pointer;transition:background .2s;}
 .modal-wish-btn:hover{background:var(--pink2);}
-.empty-state{text-align:center;padding:3rem;color:var(--text2);font-size:.9rem;}
+.empty-state{text-align:center;padding:3rem;color:var(--text2);font-size:1rem;}
 .empty-state .e-icon{font-size:2.5rem;margin-bottom:.8rem;}
 @media(max-width:768px){
   nav{padding:0 1.2rem;}
   .nav-inner{height:56px;}
   .logo{font-size:1.15rem;}
   .logo span{font-size:1.25rem;}
-  .logo-mark{width:32px;height:32px;}
   .nav-links{display:none;}
   .nav-cart{display:none;}
   .hamburger{display:flex;}
@@ -205,7 +206,7 @@ nav{background:#ffffff;border-bottom:1.5px solid var(--border);position:sticky;t
 <div class="banner">🌸 滿1200元免運・新品持續上架・歡迎追蹤 🌸</div>
 <nav>
   <div class="nav-inner">
-    <div class="logo"><img src="sakura-cat-logo.svg" class="logo-mark" alt="櫻花喵"> 櫻花喵小舖</div>
+    <div class="logo"><span>🐱</span> 櫻花喵小舖</div>
     <ul class="nav-links">
       <li><a href="#" onclick="show('home')">首頁</a></li>
       <li><a href="#" onclick="show('shop')">商品</a></li>
@@ -325,7 +326,7 @@ nav{background:#ffffff;border-bottom:1.5px solid var(--border);position:sticky;t
       </div>
       <div style="margin-top:1.4rem;padding-top:1.2rem;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:.6rem;align-items:center;">
         <a href="tel:0958792070" style="display:flex;align-items:center;gap:.5rem;color:var(--text2);font-size:.88rem;text-decoration:none;">📞 0958-792-070</a>
-        <a href="/cdn-cgi/l/email-protection#4e2f23202b3d272f797e7b7e7a0e29232f2722602d2123" style="display:flex;align-items:center;gap:.5rem;color:var(--text2);font-size:.88rem;text-decoration:none;">✉️ <span class="__cf_email__" data-cfemail="8eefe3e0ebfde7efb9bebbbebacee9e3efe7e2a0ede1e3">[email&#160;protected]</span></a>
+        <a href="mailto:amnesia70504@gmail.com" style="display:flex;align-items:center;gap:.5rem;color:var(--text2);font-size:.88rem;text-decoration:none;">✉️ amnesia70504@gmail.com</a>
       </div>
     </div>
   </div>
@@ -345,7 +346,7 @@ nav{background:#ffffff;border-bottom:1.5px solid var(--border);position:sticky;t
         <a class="contact-link" href="https://tw.shp.ee/kUtALvpZ" target="_blank">🛍 蝦皮賣場</a>
         <a class="contact-link" href="https://www.instagram.com/meow.meow.sakura?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==" target="_blank">📷 Instagram</a>
         <a class="contact-link" href="tel:0958792070">📞 0958-792-070</a>
-        <a class="contact-link" href="/cdn-cgi/l/email-protection#086965666d7b61693f383d383c486f65696164266b6765" target="_blank">✉️ 聯絡我們</a>
+        <a class="contact-link" href="mailto:amnesia70504@gmail.com" target="_blank">✉️ 聯絡我們</a>
       </div>
     </div>
   </div>
@@ -485,7 +486,7 @@ nav{background:#ffffff;border-bottom:1.5px solid var(--border);position:sticky;t
 </div>
 <div class="toast" id="toast">✓ 已加入購物車！</div>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script type="module">
+<script type="module">
 // ════════════════════════════════════════
 // Firebase 設定
 // ════════════════════════════════════════
@@ -594,13 +595,22 @@ function getProducts(){ return _products; }
 // 購物車
 // ════════════════════════════════════════
 let cart=[];
-function addToCart(productId){
+function addToCart(productId, variantIdx=null){
   const products=getProducts();
   const p=products.find(x=>x.id===productId);
   if(!p) return;
-  const existing=cart.find(x=>x.id===productId);
+  // 如果有款式但未選擇
+  if(p.variants&&p.variants.length&&variantIdx===null){
+    alert('請先選擇款式');return;
+  }
+  const variant=variantIdx!==null&&p.variants?p.variants[variantIdx]:null;
+  const price=variant?.price||p.price;
+  const name=variant?`${p.name}（${variant.name}）`:p.name;
+  const img=variant?.img||(p.imgs&&p.imgs[0])||'';
+  const cartKey=variant?`${productId}_${variantIdx}`:productId;
+  const existing=cart.find(x=>x.cartKey===cartKey);
   if(existing) existing.qty++;
-  else cart.push({id:productId,name:p.name,price:p.price,emoji:p.emoji,imgs:p.imgs,qty:1});
+  else cart.push({cartKey, id:productId, name, price, imgs:img?[img]:p.imgs||[], qty:1});
   updateCartCount();
   showToast();
 }
@@ -621,19 +631,19 @@ function renderCart(){
       <div class="cart-thumb">${thumb}</div>
       <div class="cart-item-info"><div class="cart-item-name">${item.name}</div><div class="cart-item-price">NT$${item.price}</div></div>
       <div class="qty-control">
-        <button class="qty-btn" onclick="changeQty('${item.id}',-1)">-</button>
+        <button class="qty-btn" onclick="changeQty('${item.cartKey}',-1)">-</button>
         <span style="font-size:.88rem;min-width:20px;text-align:center;">${item.qty}</span>
-        <button class="qty-btn" onclick="changeQty('${item.id}',1)">+</button>
+        <button class="qty-btn" onclick="changeQty('${item.cartKey}',1)">+</button>
       </div>
     </div>`;
   }).join('');
   updateCartSummary();
 }
-function changeQty(id,dir){
-  const item=cart.find(x=>x.id===id);
+function changeQty(cartKey,dir){
+  const item=cart.find(x=>x.cartKey===cartKey);
   if(!item) return;
   item.qty+=dir;
-  if(item.qty<=0) cart=cart.filter(x=>x.id!==id);
+  if(item.qty<=0) cart=cart.filter(x=>x.cartKey!==cartKey);
   updateCartCount();
   renderCart();
 }
@@ -727,30 +737,49 @@ function openModal(productId){
     return `<div class="modal-spec"><div class="modal-spec-label">${l}</div><div class="modal-spec-value">${v}</div></div>`;
   }).join('');
   document.getElementById('modal-add-btn').onclick=()=>addToCart(productId);
-  // 可選規格
+  // 款式選項（蝦皮風格）
   const variants=p.variants||[];
   const variantEl=document.getElementById('modal-variants');
-  variantEl.innerHTML=variants.length
-    ?variants.map((v,vi)=>`
+  if(variants.length){
+    variantEl.innerHTML=`
       <div class="modal-variant">
-        <div class="modal-variant-label">${v.name}：<span id="variant-selected-${vi}" style="color:var(--pink4);">請選擇</span></div>
-        <div class="modal-variant-options" data-group="${vi}">
-          ${(v.options||[]).map(opt=>`<button class="variant-btn" type="button">${opt}</button>`).join('')}
+        <div class="modal-variant-label">款式</div>
+        <div class="modal-variant-options" id="modal-variant-btns">
+          ${variants.map((v,i)=>`
+            <button class="variant-btn ${v.stock==='售完'?'variant-sold-out':''}" type="button" data-idx="${i}" ${v.stock==='售完'?'disabled':''}>
+              ${v.img?`<img src="${v.img}" style="width:36px;height:36px;border-radius:6px;object-fit:cover;margin-right:.4rem;vertical-align:middle;">`:''}
+              <span>${v.name}</span>
+              ${v.stock==='預購'?`<span class="variant-stock-badge preorder">預購</span>`:''}
+              ${v.stock==='售完'?`<span class="variant-stock-badge soldout">售完</span>`:''}
+            </button>`).join('')}
         </div>
-      </div>`).join('')
-    :'';
-  // 用事件委派處理點擊
-  variantEl.onclick=function(e){
-    const btn=e.target.closest('.variant-btn');
-    if(!btn) return;
-    const group=btn.closest('.modal-variant-options');
-    if(!group) return;
-    group.querySelectorAll('.variant-btn').forEach(b=>b.classList.remove('selected'));
-    btn.classList.add('selected');
-    const vi=group.dataset.group;
-    const label=document.getElementById('variant-selected-'+vi);
-    if(label) label.textContent=btn.textContent;
-  };
+        <div id="modal-variant-info" style="font-size:.85rem;color:var(--text2);margin-top:.5rem;min-height:1.2rem;"></div>
+      </div>`;
+    // 事件委派
+    variantEl.onclick=function(e){
+      const btn=e.target.closest('.variant-btn');
+      if(!btn||btn.disabled) return;
+      document.querySelectorAll('#modal-variant-btns .variant-btn').forEach(b=>b.classList.remove('selected'));
+      btn.classList.add('selected');
+      const idx=parseInt(btn.dataset.idx);
+      const v=variants[idx];
+      const info=document.getElementById('modal-variant-info');
+      if(info){
+        const price=v.price||p.price;
+        info.textContent=`已選：${v.name}　NT$${price}　${v.stock}`;
+      }
+      // 更新價格顯示
+      const priceEl=document.getElementById('modal-price');
+      if(priceEl){
+        const price=v.price||p.price;
+        priceEl.innerHTML=p.oldPrice?`NT$${price} <s>NT$${p.oldPrice}</s>`:`NT$${price}`;
+      }
+      // 更新加入購物車
+      document.getElementById('modal-add-btn').onclick=()=>addToCart(productId,idx);
+    };
+  } else {
+    variantEl.innerHTML='';
+  }
   galleryImgs=p.imgs&&p.imgs.length?p.imgs:[p.emoji||'🌸'];
   galleryIdx=0;
   renderGallery();
@@ -805,11 +834,6 @@ window.addToCart=addToCart;
 window.changeQty=changeQty;
 window.bannerNav=bannerNav;
 window.setBanner=setBanner;
-window.selectVariant=function(btn, groupIdx){
-  btn.closest('.modal-variant-options').querySelectorAll('.variant-btn').forEach(b=>b.classList.remove('selected'));
-  btn.classList.add('selected');
-  document.getElementById(`variant-selected-${groupIdx}`).textContent=btn.textContent;
-};
 window.queryOrders=window.queryOrders;
 window.openOrderPanel=window.openOrderPanel;
 window.closeOrderPanel=window.closeOrderPanel;
