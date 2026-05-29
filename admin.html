@@ -130,6 +130,25 @@ tr[onclick]:hover td{background:#fdf0f5;cursor:pointer;}
 .toast.show{transform:translateY(0);opacity:1;}
 .toast.green{background:var(--green2);}
 
+/* ── 彩色標籤系統 ── */
+.tag-color-row{display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.6rem;}
+.tag-color-dot{width:22px;height:22px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:all .15s;flex-shrink:0;}
+.tag-color-dot.selected{border-color:#333;transform:scale(1.25);}
+.tag-chip-wrap{display:flex;flex-wrap:wrap;gap:.35rem;min-height:34px;padding:.4rem;background:var(--cream);border-radius:10px;border:1.5px solid var(--border);margin-bottom:.5rem;}
+.tag-chip{display:inline-flex;align-items:center;gap:.25rem;border-radius:12px;padding:.18rem .6rem .18rem .5rem;font-size:.75rem;font-weight:500;}
+.tag-chip-x{background:none;border:none;cursor:pointer;font-size:.85rem;opacity:.6;color:inherit;padding:0;line-height:1;transition:opacity .15s;}
+.tag-chip-x:hover{opacity:1;}
+.tag-add-row{display:flex;gap:.5rem;align-items:center;}
+.tag-add-input{flex:1;border:1.5px solid var(--border);border-radius:10px;padding:.45rem .8rem;font-size:.84rem;font-family:inherit;background:#fff;outline:none;transition:border-color .2s;}
+.tag-add-input:focus{border-color:var(--pink3);}
+.tag-quick-row{display:flex;flex-wrap:wrap;gap:.3rem;margin-top:.5rem;}
+/* 特價勾選 */
+.sale-checkbox-wrap{display:flex;align-items:center;gap:.6rem;background:#fff5f5;border:1.5px solid #f5c6c6;border-radius:10px;padding:.65rem .9rem;cursor:pointer;transition:background .15s;}
+.sale-checkbox-wrap:hover{background:#fdecea;}
+.sale-checkbox-wrap input{accent-color:#e74c3c;width:15px;height:15px;cursor:pointer;}
+.sale-checkbox-label{font-size:.87rem;color:#c0392b;font-weight:500;}
+.sale-checkbox-hint{font-size:.72rem;color:#e5a0a0;}
+
 /* ── Delete confirm ── */
 .confirm-modal{position:fixed;inset:0;background:rgba(40,15,25,.45);z-index:300;display:none;align-items:center;justify-content:center;}
 .confirm-modal.open{display:flex;}
@@ -360,7 +379,7 @@ tr[onclick]:hover td{background:#fdf0f5;cursor:pointer;}
 
     <div class="fg-row">
       <div class="fg">
-        <label>售價 (NT$) *</label>
+        <label>售價 (NT$) <span style="font-size:.72rem;color:#aaa;font-weight:400;">選填，留空顯示「詢價」</span></label>
         <input type="number" id="f-price" placeholder="380" min="0">
       </div>
       <div class="fg">
@@ -370,8 +389,26 @@ tr[onclick]:hover td{background:#fdf0f5;cursor:pointer;}
     </div>
 
     <div class="fg">
-      <label>標籤文字</label>
-      <input type="text" id="f-tag" placeholder="例：娃衣、新品、限定">
+      <label>商品標籤（彩色）</label>
+      <div class="tag-chip-wrap" id="f-tags-display"><span style="font-size:.75rem;color:#bbb;">尚未加入標籤</span></div>
+      <div class="tag-color-row" id="f-color-row"></div>
+      <div class="tag-add-row">
+        <input class="tag-add-input" id="f-tag-input" type="text" placeholder="輸入標籤名稱後按新增">
+        <button class="btn btn-outline btn-sm" onclick="addFormTag()">＋ 新增</button>
+      </div>
+      <div class="tag-quick-row" id="f-tag-quick"></div>
+      <div class="fg-hint">點快速標籤一鍵套用，或自行輸入</div>
+    </div>
+
+    <!-- 特價勾選 -->
+    <div class="fg">
+      <label class="sale-checkbox-wrap" for="f-is-sale">
+        <input type="checkbox" id="f-is-sale">
+        <div>
+          <div class="sale-checkbox-label">✦ 加入特價專區</div>
+          <div class="sale-checkbox-hint">勾選後會在特價區顯示，並標示特價標籤</div>
+        </div>
+      </label>
     </div>
 
     <div class="fg">
@@ -493,6 +530,7 @@ onAuthStateChanged(auth, user => {
 });
 
 function initData(){
+  initDefaultTags();
   const q = query(collection(db,'products'), orderBy('createdAt','asc'));
   onSnapshot(q, snapshot => {
     _products = snapshot.docs.map(d => ({id: d.id, ...d.data()}));
@@ -514,6 +552,120 @@ document.getElementById('logout-btn').onclick = () => auth.signOut();
 // ════════════════════════════════════════
 // 自訂分類管理
 // ════════════════════════════════════════
+// ════════════════════════════════════════
+// 彩色標籤系統
+// ════════════════════════════════════════
+const TAG_PALETTE = [
+  {bg:'#fde8f0',text:'#b85c78',border:'#f0c6d6'},  // 粉紅
+  {bg:'#e8f4fd',text:'#2980b9',border:'#bee0f5'},  // 藍
+  {bg:'#e8fdf0',text:'#27ae60',border:'#b2eac6'},  // 綠
+  {bg:'#fdf6e8',text:'#d68910',border:'#f5dea0'},  // 金
+  {bg:'#f0e8fd',text:'#8e44ad',border:'#d5b8f0'},  // 紫
+  {bg:'#fde8e8',text:'#c0392b',border:'#f5b8b8'},  // 紅
+  {bg:'#e8fdfd',text:'#17a589',border:'#a0e8e0'},  // 青
+  {bg:'#fdf0e8',text:'#ca6f1e',border:'#f5cfa0'},  // 橘
+];
+
+// 全域標籤庫（存 localStorage）
+function getAllTags(){
+  try{ return JSON.parse(localStorage.getItem('sakura_all_tags')||'[]'); }catch(e){ return []; }
+}
+function saveAllTags(tags){ localStorage.setItem('sakura_all_tags', JSON.stringify(tags)); }
+function initDefaultTags(){
+  if(getAllTags().length===0){
+    saveAllTags([
+      {name:'娃衣',colorIdx:0},{name:'盲盒',colorIdx:1},{name:'配件',colorIdx:3},
+      {name:'限定',colorIdx:4},{name:'新品',colorIdx:2},{name:'特價',colorIdx:5},
+    ]);
+  }
+}
+
+// 表單內的已選標籤
+let formSelectedTags = [];
+let formSelectedColorIdx = 0;
+
+function renderFormTagColorPicker(){
+  const el = document.getElementById('f-color-row');
+  if(!el) return;
+  el.innerHTML = TAG_PALETTE.map((c,i)=>`
+    <div class="tag-color-dot${i===formSelectedColorIdx?' selected':''}"
+      style="background:${c.bg};border-color:${i===formSelectedColorIdx?c.text:'transparent'};outline:2px solid ${i===formSelectedColorIdx?c.text:'transparent'};"
+      onclick="selectFormColor(${i})"></div>`).join('');
+}
+
+function selectFormColor(idx){
+  formSelectedColorIdx = idx;
+  renderFormTagColorPicker();
+}
+
+function renderFormTags(){
+  const el = document.getElementById('f-tags-display');
+  if(!el) return;
+  if(!formSelectedTags.length){el.innerHTML='<span style="font-size:.75rem;color:#bbb;">尚未加入標籤</span>';return;}
+  el.innerHTML = formSelectedTags.map((t,i)=>{
+    const c = TAG_PALETTE[t.colorIdx]||TAG_PALETTE[0];
+    return `<span class="tag-chip" style="background:${c.bg};color:${c.text};border:1px solid ${c.border};">
+      ${t.name}<button class="tag-chip-x" onclick="removeFormTag(${i})">✕</button></span>`;
+  }).join('');
+}
+
+function renderFormTagQuick(){
+  const el = document.getElementById('f-tag-quick');
+  if(!el) return;
+  const all = getAllTags();
+  if(!all.length){el.innerHTML='';return;}
+  el.innerHTML = '<span style="font-size:.72rem;color:var(--text2);margin-right:.2rem;">快速套用：</span>'+
+    all.map(t=>{
+      const c = TAG_PALETTE[t.colorIdx]||TAG_PALETTE[0];
+      return `<span class="tag-chip" style="background:${c.bg};color:${c.text};border:1px solid ${c.border};cursor:pointer;"
+        onclick="quickAddFormTag('${t.name}',${t.colorIdx})">${t.name} +</span>`;
+    }).join('');
+}
+
+function addFormTag(){
+  const inp = document.getElementById('f-tag-input');
+  const name = inp.value.trim();
+  if(!name){toast('⚠ 請輸入標籤名稱','error');return;}
+  if(formSelectedTags.find(t=>t.name===name)){toast('⚠ 標籤已加入','error');return;}
+  formSelectedTags.push({name, colorIdx:formSelectedColorIdx});
+  inp.value='';
+  renderFormTags();
+  // 若全域標籤庫沒有，自動加入
+  const all=getAllTags();
+  if(!all.find(t=>t.name===name)){
+    all.push({name,colorIdx:formSelectedColorIdx});
+    saveAllTags(all);
+    renderFormTagQuick();
+  }
+}
+
+function quickAddFormTag(name, colorIdx){
+  if(formSelectedTags.find(t=>t.name===name)) return;
+  formSelectedTags.push({name, colorIdx});
+  renderFormTags();
+}
+
+function removeFormTag(idx){
+  formSelectedTags.splice(idx,1);
+  renderFormTags();
+}
+
+function initFormTagUI(){
+  formSelectedTags = [];
+  formSelectedColorIdx = 0;
+  renderFormTagColorPicker();
+  renderFormTags();
+  renderFormTagQuick();
+}
+
+function loadProductTagsToForm(tags){
+  formSelectedTags = tags ? tags.map(t=>({...t})) : [];
+  formSelectedColorIdx = 0;
+  renderFormTagColorPicker();
+  renderFormTags();
+  renderFormTagQuick();
+}
+
 const DEFAULT_CATS = {dress:'娃衣套裝',blind:'娃娃盲盒',acc:'配件飾品',sale:'特價專區'};
 const CAT_BADGE={dress:'badge-dress',blind:'badge-blind',acc:'badge-acc',sale:'badge-sale'};
 
@@ -785,10 +937,12 @@ function openDrawer(reset=true){
   if(reset){
     document.getElementById('drawer-title').textContent='新增商品';
     document.getElementById('edit-id').value='';
-    ['f-name','f-tag','f-desc'].forEach(id=>document.getElementById(id).value='');
+    ['f-name','f-desc'].forEach(id=>document.getElementById(id).value='');
     document.getElementById('f-price').value='';
     document.getElementById('f-oldprice').value='';
     document.getElementById('f-featured').checked=false;
+    document.getElementById('f-is-sale').checked=false;
+    initFormTagUI();
     editingImgs=[];
     renderImgPreviews();
     document.getElementById('spec-list').innerHTML='';
@@ -813,8 +967,9 @@ function editProduct(id){
   document.getElementById('drawer-title').textContent='編輯商品';
   document.getElementById('edit-id').value=p.id;
   document.getElementById('f-name').value=p.name;
-  document.getElementById('f-tag').value=p.tag||'';
-  document.getElementById('f-cat').value=p.cat;
+  document.getElementById('f-featured').checked=!!p.featured;
+  document.getElementById('f-is-sale').checked=!!p.isSale;
+  loadProductTagsToForm(p.tags||[]);  document.getElementById('f-cat').value=p.cat;
   document.getElementById('f-price').value=p.price;
   document.getElementById('f-oldprice').value=p.oldPrice||'';
   document.getElementById('f-desc').value=p.desc||'';
@@ -878,15 +1033,24 @@ function renderImgPreviews(){
   const hint=document.getElementById('img-drag-hint');
   if(hint) hint.style.display=editingImgs.length>1?'block':'none';
   list.innerHTML=editingImgs.map((img,i)=>`
-    <div class="img-preview-item" draggable="true" data-idx="${i}"
-      ondragstart="imgDragStart(event,${i})"
-      ondragover="imgDragOver(event)"
-      ondrop="imgDrop(event,${i})"
-      ondragend="imgDragEnd(event)">
+    <div class="img-preview-item" data-idx="${i}">
       <img src="${img}" alt="">
       <button class="img-del" onclick="removeImg(${i})">✕</button>
       ${i===0?'<div class="img-main-badge">主圖</div>':''}
+      <div class="img-order-btns">
+        ${i>0?`<button class="img-order-btn" onclick="moveImg(${i},-1)">▲</button>`:''}
+        ${i<editingImgs.length-1?`<button class="img-order-btn" onclick="moveImg(${i},1)">▼</button>`:''}
+      </div>
     </div>`).join('');
+}
+
+function moveImg(idx, dir){
+  const newIdx=idx+dir;
+  if(newIdx<0||newIdx>=editingImgs.length) return;
+  const tmp=editingImgs[idx];
+  editingImgs[idx]=editingImgs[newIdx];
+  editingImgs[newIdx]=tmp;
+  renderImgPreviews();
 }
 
 let dragSrcIdx=-1;
@@ -1014,15 +1178,20 @@ function getSpecs(){
 // ════════════════════════════════════════
 async function saveProduct(){
   const name=document.getElementById('f-name').value.trim();
-  const price=parseInt(document.getElementById('f-price').value);
+  const priceRaw=document.getElementById('f-price').value.trim();
+  const price=priceRaw?parseInt(priceRaw):null;
   if(!name){toast('⚠ 請輸入商品名稱','error');return;}
-  if(!price){toast('⚠ 請輸入售價','error');return;}
+
 
   const editId=document.getElementById('edit-id').value;
+  const catVal=document.getElementById('f-cat').value==='__custom__'?'custom':document.getElementById('f-cat').value;
+  const isSale=document.getElementById('f-is-sale').checked;
   const product={
     name,
-    tag: document.getElementById('f-tag').value.trim()||getCatLabel(document.getElementById('f-cat').value)||'',
-    cat: document.getElementById('f-cat').value==='__custom__'?'custom':document.getElementById('f-cat').value,
+    tags: formSelectedTags,
+    tag: formSelectedTags.length ? formSelectedTags.map(t=>t.name).join('・') : getCatLabel(catVal),
+    cat: catVal,
+    isSale,
     price,
     oldPrice: parseInt(document.getElementById('f-oldprice').value)||0,
     imgs: [...editingImgs],
@@ -1210,6 +1379,10 @@ async function deleteBanner(id){
 // 暴露全域函式
 // ════════════════════════════════════════
 window.switchPanel=switchPanel;
+window.addFormTag=addFormTag;
+window.removeFormTag=removeFormTag;
+window.quickAddFormTag=quickAddFormTag;
+window.selectFormColor=selectFormColor;
 window.openDrawer=openDrawer;
 window.closeDrawer=closeDrawer;
 window.saveProduct=saveProduct;

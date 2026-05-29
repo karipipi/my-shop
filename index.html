@@ -87,6 +87,40 @@ nav{background:#ffffff;border-bottom:1.5px solid var(--border);position:sticky;t
 .cat-tabs{display:flex;gap:.6rem;margin-bottom:1.5rem;flex-wrap:wrap;justify-content:center;}
 .cat-tab{background:#ffffff;border:1.5px solid var(--border);border-radius:20px;padding:.4rem 1.1rem;font-size:.82rem;cursor:pointer;font-family:inherit;color:var(--text2);transition:all .2s;}
 .cat-tab.active,.cat-tab:hover{background:var(--pink4);border-color:var(--pink4);color:#ffffff;}
+/* ── 側滑分類選單 ── */
+.slide-cat-mask{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:400;opacity:0;pointer-events:none;transition:opacity .28s;}
+.slide-cat-mask.open{opacity:1;pointer-events:all;}
+.slide-cat-panel{position:fixed;top:0;left:0;height:100%;width:290px;max-width:82vw;background:#fff;z-index:401;transform:translateX(-100%);transition:transform .32s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;box-shadow:4px 0 24px rgba(0,0,0,.08);}
+.slide-cat-panel.open{transform:translateX(0);}
+.slide-cat-head{padding:1.1rem 1.2rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--pink);}
+.slide-cat-head-logo{font-family:'Noto Serif TC',serif;font-size:1rem;color:var(--pink4);font-weight:500;display:flex;align-items:center;gap:.4rem;}
+.slide-cat-close{background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--text2);line-height:1;padding:.2rem;}
+.slide-cat-body{flex:1;overflow-y:auto;}
+.slide-cat-row{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.3rem;font-size:.95rem;color:var(--text);border-bottom:1px solid #f7edf2;cursor:pointer;transition:background .15s;text-decoration:none;}
+.slide-cat-row:hover,.slide-cat-row.active{background:var(--pink);}
+.slide-cat-row.active{font-weight:500;color:var(--pink4);}
+.slide-cat-arrow{color:#ccc;font-size:.85rem;}
+.slide-cat-row.active .slide-cat-arrow{color:var(--pink3);}
+.slide-cat-sale{color:#c0392b;font-weight:500;}
+.slide-cat-sale:hover,.slide-cat-sale.active{background:#fff5f5;}
+.slide-cat-sale .slide-cat-arrow{color:#e5a0a0;}
+.slide-cat-foot{padding:.9rem 1.2rem;border-top:1px solid var(--border);font-size:.75rem;color:var(--text2);text-align:center;}
+/* 商品頁頂部篩選列（桌機用）*/
+.shop-filter-bar{display:flex;align-items:center;gap:.5rem;margin-bottom:1.4rem;flex-wrap:wrap;}
+.shop-filter-chip{background:#fff;border:1.5px solid var(--border);border-radius:20px;padding:.35rem 1rem;font-size:.82rem;cursor:pointer;font-family:inherit;color:var(--text2);transition:all .2s;}
+.shop-filter-chip:hover,.shop-filter-chip.active{background:var(--pink4);border-color:var(--pink4);color:#fff;}
+.shop-filter-chip.sale-chip{border-color:#f5b8b8;color:#c0392b;}
+.shop-filter-chip.sale-chip:hover,.shop-filter-chip.sale-chip.active{background:#e74c3c;border-color:#e74c3c;color:#fff;}
+/* 手機版商品頁頂部：分類按鈕 */
+.shop-mobile-bar{display:none;align-items:center;gap:.6rem;margin-bottom:1.2rem;}
+.shop-mobile-cat-btn{display:flex;align-items:center;gap:.4rem;background:#fff;border:1.5px solid var(--border);border-radius:20px;padding:.4rem 1rem;font-size:.85rem;cursor:pointer;font-family:inherit;color:var(--text2);transition:all .2s;}
+.shop-mobile-cat-btn:hover{border-color:var(--pink3);color:var(--pink4);}
+.shop-mobile-active-tag{font-size:.78rem;color:var(--pink4);background:var(--pink);border-radius:12px;padding:.2rem .6rem;}
+@media(max-width:768px){
+  .cat-tabs{display:none;}
+  .shop-filter-bar{display:none;}
+  .shop-mobile-bar{display:flex;}
+}
 .about-card{background:#ffffff;border-radius:20px;border:1px solid var(--border);padding:2.5rem;max-width:680px;margin:0 auto 2rem;}
 .about-avatar{width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,var(--pink2),var(--pink3));display:flex;align-items:center;justify-content:center;font-size:2rem;margin:0 auto 1.2rem;}
 .about-card h2{font-family:'Noto Serif TC',serif;font-size:1.3rem;color:var(--pink4);text-align:center;margin-bottom:.8rem;}
@@ -228,6 +262,17 @@ nav{background:#ffffff;border-bottom:1.5px solid var(--border);position:sticky;t
 </head>
 <body>
 <div class="bg-overlay"></div>
+
+<!-- ── 側滑分類選單 ── -->
+<div class="slide-cat-mask" id="slideCatMask" onclick="closeSlideCat()"></div>
+<div class="slide-cat-panel" id="slideCatPanel">
+  <div class="slide-cat-head">
+    <div class="slide-cat-head-logo">🐱 商品分類</div>
+    <button class="slide-cat-close" onclick="closeSlideCat()">✕</button>
+  </div>
+  <div class="slide-cat-body" id="slideCatBody"></div>
+  <div class="slide-cat-foot">滿1200元免運・用心包裝 💝</div>
+</div>
 <div class="banner">🌸 滿1200元免運・新品持續上架・歡迎追蹤 🌸</div>
 <nav>
   <div class="nav-inner">
@@ -307,6 +352,7 @@ nav{background:#ffffff;border-bottom:1.5px solid var(--border);position:sticky;t
   <button class="mobile-menu-close" onclick="toggleMobileMenu()">✕</button>
   <a href="javascript:void(0)" onclick="show('home');toggleMobileMenu()">首頁</a>
   <a href="javascript:void(0)" onclick="show('shop');toggleMobileMenu()">商品</a>
+  <a href="javascript:void(0)" onclick="toggleMobileMenu();setTimeout(openSlideCat,200)" style="color:var(--pink3);">商品分類 ☰</a>
   <a href="javascript:void(0)" onclick="show('about');toggleMobileMenu()">關於我們</a>
   <a href="javascript:void(0)" onclick="show('myorders');toggleMobileMenu()">我的訂單</a>
 </div>
@@ -330,7 +376,15 @@ nav{background:#ffffff;border-bottom:1.5px solid var(--border);position:sticky;t
 <div class="page" id="shop">
   <div class="section-title" style="margin-top:1rem;">全部商品</div>
   <div class="section-sub">滿1200元免運費 ✿</div>
-  <div class="cat-tabs">
+  <!-- 桌機篩選列 -->
+  <div class="shop-filter-bar" id="shopFilterBar"></div>
+  <!-- 手機：分類按鈕 -->
+  <div class="shop-mobile-bar">
+    <button class="shop-mobile-cat-btn" onclick="openSlideCat()">☰ 分類選單</button>
+    <span class="shop-mobile-active-tag" id="shopMobileActiveTag">全部商品</span>
+  </div>
+  <!-- 舊版 cat-tabs 保留供 JS 相容，已用 CSS 隱藏 -->
+  <div class="cat-tabs" id="catTabsLegacy">
     <button class="cat-tab active" onclick="filterCat(this,'all')">全部</button>
     <button class="cat-tab" onclick="filterCat(this,'dress')">娃衣套裝</button>
     <button class="cat-tab" onclick="filterCat(this,'blind')">娃娃盲盒</button>
@@ -727,10 +781,36 @@ function getPriceDisplay(p){
     .filter(v=>v.price&&v.stock!=='售完')
     .map(v=>parseInt(v.price)||0)
     .filter(v=>v>0);
-  if(variantPrices.length===0) return p.oldPrice?`NT$${p.price} <s>NT$${p.oldPrice}</s>`:`NT$${p.price}`;
+  if(variantPrices.length===0){
+    if(!p.price) return `<span style="color:var(--text2);font-size:.88rem;">歡迎詢價</span>`;
+    return p.oldPrice?`NT$${p.price} <s>NT$${p.oldPrice}</s>`:`NT$${p.price}`;
+  }
   const min=Math.min(...variantPrices);
   const max=Math.max(...variantPrices);
   return min===max?`NT$${min}`:`NT$${min}～${max}`;
+}
+
+// 彩色標籤渲染
+const TAG_PALETTE_FRONT=[
+  {bg:'#fde8f0',text:'#b85c78',border:'#f0c6d6'},
+  {bg:'#e8f4fd',text:'#2980b9',border:'#bee0f5'},
+  {bg:'#e8fdf0',text:'#27ae60',border:'#b2eac6'},
+  {bg:'#fdf6e8',text:'#d68910',border:'#f5dea0'},
+  {bg:'#f0e8fd',text:'#8e44ad',border:'#d5b8f0'},
+  {bg:'#fde8e8',text:'#c0392b',border:'#f5b8b8'},
+  {bg:'#e8fdfd',text:'#17a589',border:'#a0e8e0'},
+  {bg:'#fdf0e8',text:'#ca6f1e',border:'#f5cfa0'},
+];
+function renderProductTags(p){
+  if(p.tags&&p.tags.length){
+    return p.tags.map(t=>{
+      const c=TAG_PALETTE_FRONT[t.colorIdx]||TAG_PALETTE_FRONT[0];
+      return `<span style="display:inline-block;font-size:.68rem;border-radius:10px;padding:.12rem .55rem;background:${c.bg};color:${c.text};border:1px solid ${c.border};">${t.name}</span>`;
+    }).join('');
+  }
+  const label=p.tag||CAT_LABEL[p.cat]||'';
+  if(!label) return '';
+  return `<span class="product-tag">${label}</span>`;
 }
 
 function productCardHTML(p){
@@ -739,10 +819,11 @@ function productCardHTML(p){
     :`${p.emoji||'🌸'}`;
   const priceStr=getPriceDisplay(p);
   const hasVariants=p.variants&&p.variants.length>0;
-  return `<div class="product-card" data-cat="${p.cat}" onclick="openModal('${p.id}')">
-    <div class="product-img">${thumb}</div>
+  const isSale=p.cat==='sale'||!!p.isSale;
+  return `<div class="product-card" data-cat="${p.cat}" data-sale="${isSale}" onclick="openModal('${p.id}')">
+    <div class="product-img">${thumb}${isSale?'<span style="position:absolute;top:.5rem;right:.5rem;background:#e74c3c;color:#fff;font-size:.65rem;border-radius:8px;padding:.15rem .5rem;font-weight:500;">特價</span>':''}</div>
     <div class="product-info">
-      <span class="product-tag">${p.tag||CAT_LABEL[p.cat]||''}</span>
+      <div style="display:flex;flex-wrap:wrap;gap:.3rem;margin-bottom:.3rem;">${renderProductTags(p)}</div>
       <div class="product-name">${p.name}</div>
       <div class="product-price">${priceStr}</div>
       <button class="add-btn" onclick="event.stopPropagation();${hasVariants?`openModal('${p.id}')`:`addToCart('${p.id}')`}">${hasVariants?'選擇款式 →':'加入購物車 +'}</button>
@@ -761,6 +842,7 @@ function renderShop(){
   homeGrid.innerHTML=featured.length
     ?featured.map(productCardHTML).join('')
     :products.slice(0,4).map(productCardHTML).join('');
+  buildShopFilterBar();
 }
 
 // ════════════════════════════════════════
@@ -794,14 +876,97 @@ window.addEventListener('popstate', function(e){
 // ════════════════════════════════════════
 // 分類篩選
 // ════════════════════════════════════════
+// 從 Firestore 抓到的分類清單（renderShop 時動態建立）
+let _shopCats = [];
+
 let currentCat='all';
 function filterCat(btn,cat){
   currentCat=cat;
+  // 更新桌機 tab
   document.querySelectorAll('.cat-tab').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  document.querySelectorAll('#shop-grid .product-card').forEach(c=>{
-    c.style.display=(cat==='all'||c.dataset.cat===cat)?'block':'none';
+  if(btn) btn.classList.add('active');
+  // 更新桌機篩選列
+  document.querySelectorAll('.shop-filter-chip').forEach(c=>{
+    c.classList.toggle('active', c.dataset.cat===cat);
   });
+  // 更新手機標籤
+  const tagEl=document.getElementById('shopMobileActiveTag');
+  if(tagEl){
+    const labels={'all':'全部商品','sale':'特價專區'};
+    tagEl.textContent=labels[cat]||cat;
+  }
+  // 更新側滑選單 active
+  document.querySelectorAll('.slide-cat-row').forEach(r=>{
+    r.classList.toggle('active', r.dataset.cat===cat);
+  });
+  // 過濾商品
+  document.querySelectorAll('#shop-grid .product-card').forEach(c=>{
+    const match = cat==='all' || c.dataset.cat===cat || (cat==='sale' && c.dataset.sale==='true');
+    c.style.display=match?'block':'none';
+  });
+  closeSlideCat();
+}
+
+function filterByCat(cat){
+  currentCat=cat;
+  // 同步所有 UI
+  document.querySelectorAll('.shop-filter-chip').forEach(c=>{
+    c.classList.toggle('active', c.dataset.cat===cat);
+  });
+  const tagEl=document.getElementById('shopMobileActiveTag');
+  if(tagEl){const labels={'all':'全部商品','sale':'特價專區'};tagEl.textContent=labels[cat]||cat;}
+  document.querySelectorAll('#shop-grid .product-card').forEach(c=>{
+    const match = cat==='all' || c.dataset.cat===cat || (cat==='sale' && c.dataset.sale==='true');
+    c.style.display=match?'block':'none';
+  });
+  closeSlideCat();
+}
+
+// ── 側滑選單開關 ──
+function openSlideCat(){
+  buildSlideCatMenu();
+  document.getElementById('slideCatPanel').classList.add('open');
+  document.getElementById('slideCatMask').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function closeSlideCat(){
+  document.getElementById('slideCatPanel').classList.remove('open');
+  document.getElementById('slideCatMask').classList.remove('open');
+  document.body.style.overflow='';
+}
+function buildSlideCatMenu(){
+  const body=document.getElementById('slideCatBody');
+  // 取得動態分類（從已載入商品）
+  const products=getProducts();
+  const catSet=new Set(products.map(p=>p.cat).filter(Boolean));
+  const CAT_NAME_MAP={dress:'娃衣套裝',blind:'娃娃盲盒',acc:'配件飾品'};
+  const rows=[
+    {cat:'all', label:'全部商品'},
+    ...[...catSet].map(c=>({cat:c, label:CAT_NAME_MAP[c]||c})),
+    {cat:'sale', label:'SALE 特價專區', isSale:true},
+  ];
+  body.innerHTML=rows.map(r=>`
+    <a class="slide-cat-row${r.isSale?' slide-cat-sale':''}${currentCat===r.cat?' active':''}" 
+       data-cat="${r.cat}" href="javascript:void(0)"
+       onclick="show('shop');filterByCat('${r.cat}')">
+      <span>${r.label}</span>
+      <span class="slide-cat-arrow">›</span>
+    </a>`).join('');
+}
+
+// 建立桌機篩選列
+function buildShopFilterBar(){
+  const bar=document.getElementById('shopFilterBar');
+  if(!bar) return;
+  const products=getProducts();
+  const catSet=new Set(products.map(p=>p.cat).filter(Boolean));
+  const CAT_NAME_MAP={dress:'娃衣套裝',blind:'娃娃盲盒',acc:'配件飾品'};
+  let html=`<button class="shop-filter-chip${currentCat==='all'?' active':''}" data-cat="all" onclick="filterByCat('all')">全部</button>`;
+  [...catSet].forEach(c=>{
+    html+=`<button class="shop-filter-chip${currentCat===c?' active':''}" data-cat="${c}" onclick="filterByCat('${c}')">${CAT_NAME_MAP[c]||c}</button>`;
+  });
+  html+=`<button class="shop-filter-chip sale-chip${currentCat==='sale'?' active':''}" data-cat="sale" onclick="filterByCat('sale')">🏷 特價專區</button>`;
+  bar.innerHTML=html;
 }
 
 // ════════════════════════════════════════
@@ -815,7 +980,7 @@ function openModal(productId){
   if(!p) return;
   currentModalId=productId;
   document.getElementById('modal-breadcrumb-name').textContent=p.name;
-  document.getElementById('modal-tag').textContent=p.tag||CAT_LABEL[p.cat]||'';
+  document.getElementById('modal-tag').innerHTML=renderProductTags(p);
   document.getElementById('modal-name').textContent=p.name;
   document.getElementById('modal-price').innerHTML=getPriceDisplay(p);
   document.getElementById('modal-desc').textContent=p.desc||'';
@@ -932,6 +1097,9 @@ document.getElementById('home-banner-zone').style.display='block';
 // 暴露全域函式（module scope 需要）
 window.show=show;
 window.filterCat=filterCat;
+window.filterByCat=filterByCat;
+window.openSlideCat=openSlideCat;
+window.closeSlideCat=closeSlideCat;
 window.openModal=openModal;
 window.closeModal=closeModal;
 window.galleryNav=galleryNav;
