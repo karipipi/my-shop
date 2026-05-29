@@ -54,11 +54,6 @@ nav{background:#ffffff;border-bottom:1.5px solid var(--border);position:sticky;t
 .banner-dots{display:flex;gap:.5rem;justify-content:center;padding:.8rem 0 1.2rem;}
 .banner-dot{width:8px;height:8px;border-radius:50%;background:var(--pink2);border:none;cursor:pointer;padding:0;transition:all .2s;}
 .banner-dot.active{background:var(--pink4);width:20px;border-radius:4px;}
-@media(max-width:768px){
-  .banner-slider{aspect-ratio:16/9;}
-  .banner-slide-placeholder .b-title{font-size:1.1rem;}
-  .banner-arrow{width:32px;height:32px;font-size:1rem;}
-}
 .btn-primary{background:var(--pink4);color:var(--white);border:none;border-radius:25px;padding:.7rem 1.8rem;font-size:.9rem;cursor:pointer;font-family:inherit;transition:all .2s;}
 .btn-primary:hover{background:#9a4a65;transform:translateY(-1px);}
 .btn-outline{background:transparent;color:var(--pink4);border:1.5px solid var(--pink3);border-radius:25px;padding:.7rem 1.8rem;font-size:.9rem;cursor:pointer;font-family:inherit;transition:all .2s;}
@@ -177,27 +172,48 @@ nav{background:#ffffff;border-bottom:1.5px solid var(--border);position:sticky;t
   .hero h1{font-size:1.6rem;}
   .hero p{font-size:.88rem;}
   .hero-btns{flex-direction:column;align-items:center;}
-  .product-grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:.8rem;}
+  .banner-wrapper{width:100%;left:0;transform:none;margin-top:-1rem;}
+  .banner-slider{aspect-ratio:16/9;}
+  .banner-slide-placeholder .b-title{font-size:1.1rem;}
+  .banner-arrow{width:32px;height:32px;font-size:1rem;}
+  /* 商品卡片 */
+  .product-grid{grid-template-columns:repeat(2,1fr);gap:.7rem;}
+  .product-name{font-size:.88rem;}
+  .product-price{font-size:.92rem;}
+  .add-btn{font-size:.8rem;padding:.42rem;}
+  /* section */
   .section-title{font-size:1.1rem;}
+  .section-sub{font-size:.85rem;}
+  /* Modal */
+  .modal-panel{width:100%;}
+  .modal-specs{grid-template-columns:1fr;}
+  .modal-product-name{font-size:1.2rem;}
+  .modal-product-price{font-size:1.15rem;}
+  .modal-desc{font-size:.88rem;}
+  .modal-desc-title{font-size:.9rem;}
+  /* 款式選項 */
+  .variant-btn{font-size:.82rem;padding:.38rem .65rem;}
+  .modal-variant-label{font-size:.85rem;}
+  /* 購物車 */
+  .cart-thumb{width:44px;height:44px;}
+  .cart-item-name{font-size:.85rem;}
+  .cart-item-price{font-size:.8rem;}
   /* 結帳頁 */
   .order-summary{margin-top:1rem;}
   .checkout-btn{font-size:.9rem;padding:.7rem;}
   /* 填寫資料頁 */
+  #orderform>div{padding:0;}
   #orderform .btn-primary{font-size:.9rem;}
   /* 訂單詳情頁 */
   #orderdetail>div>div{padding:1rem;}
-  /* Modal */
-  .modal-panel{width:100%;}
-  .modal-specs{grid-template-columns:1fr;}
+  /* 我的訂單 */
+  #myorders>div{padding:0;}
   /* 關於我們 */
   .about-card{padding:1.5rem 1rem;}
   /* 聯絡 */
   .contact-form{padding:1.2rem;}
-  .contact-links{gap:.5rem;}
-  .contact-link{font-size:.78rem;padding:.35rem .7rem;}
-  /* 購物車 */
-  .cart-thumb{width:44px;height:44px;}
-  .cart-item-name{font-size:.82rem;}
+  .contact-links{gap:.5rem;flex-wrap:wrap;}
+  .contact-link{font-size:.8rem;padding:.38rem .75rem;}
 }
 </style>
 </head>
@@ -660,18 +676,28 @@ function showToast(){const t=document.getElementById('toast');t.classList.add('s
 // 渲染商品卡片
 // ════════════════════════════════════════
 const CAT_LABEL={dress:'娃衣',blind:'盲盒',acc:'配件',sale:'特價'};
+function getPriceDisplay(p){
+  const variants=p.variants||[];
+  const variantPrices=variants.filter(v=>v.price&&v.stock!=='售完').map(v=>v.price);
+  if(variantPrices.length===0) return p.oldPrice?`NT$${p.price} <s>NT$${p.oldPrice}</s>`:`NT$${p.price}`;
+  const min=Math.min(...variantPrices);
+  const max=Math.max(...variantPrices);
+  return min===max?`NT$${min}`:`NT$${min}～${max}`;
+}
+
 function productCardHTML(p){
   const thumb=p.imgs&&p.imgs[0]
     ?`<img src="${p.imgs[0]}" alt="${p.name}">`
     :`${p.emoji||'🌸'}`;
-  const priceStr=p.oldPrice?`NT$${p.price} <s>NT$${p.oldPrice}</s>`:`NT$${p.price}`;
+  const priceStr=getPriceDisplay(p);
+  const hasVariants=p.variants&&p.variants.length>0;
   return `<div class="product-card" data-cat="${p.cat}" onclick="openModal('${p.id}')">
     <div class="product-img">${thumb}</div>
     <div class="product-info">
       <span class="product-tag">${p.tag||CAT_LABEL[p.cat]||''}</span>
       <div class="product-name">${p.name}</div>
       <div class="product-price">${priceStr}</div>
-      <button class="add-btn" onclick="event.stopPropagation();addToCart('${p.id}')">加入購物車 +</button>
+      <button class="add-btn" onclick="event.stopPropagation();${hasVariants?`openModal('${p.id}')`:`addToCart('${p.id}')`}">${hasVariants?'選擇款式 →':'加入購物車 +'}</button>
     </div>
   </div>`;
 }
@@ -728,8 +754,7 @@ function openModal(productId){
   document.getElementById('modal-breadcrumb-name').textContent=p.name;
   document.getElementById('modal-tag').textContent=p.tag||CAT_LABEL[p.cat]||'';
   document.getElementById('modal-name').textContent=p.name;
-  document.getElementById('modal-price').innerHTML=p.oldPrice
-    ?`NT$${p.price} <s>NT$${p.oldPrice}</s>`:`NT$${p.price}`;
+  document.getElementById('modal-price').innerHTML=getPriceDisplay(p);
   document.getElementById('modal-desc').textContent=p.desc||'';
   document.getElementById('modal-specs').innerHTML=(p.specs||[]).map(s=>{
     const l=Array.isArray(s)?s[0]:s.label||'';
