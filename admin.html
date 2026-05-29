@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>後台管理 ｜ 櫻花喵小舖</title>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;500&family=Zen+Maru+Gothic:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC:wght@400;700&family=Noto+Serif+TC:wght@400;500&family=Zen+Maru+Gothic:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
 :root{
@@ -13,25 +13,26 @@
   --green:#e8f5e9;--green2:#2e7d32;--red:#fdecea;--red2:#c62828;
   --sidebar:220px;
 }
-body{font-family:'Zen Maru Gothic',sans-serif;background:#f5f0f3;color:var(--text);min-height:100vh;display:flex;font-size:16px;}
+body{font-family:'Zen Maru Gothic',sans-serif;background:#f5f0f3;color:var(--text);min-height:100vh;display:flex;}
 
 /* ── Sidebar ── */
 .sidebar{width:var(--sidebar);background:#fff;border-right:1.5px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:100;}
-.sidebar-logo{padding:1.4rem 1.2rem;border-bottom:1px solid var(--border);font-family:'Noto Serif TC',serif;font-size:1.1rem;color:var(--pink4);font-weight:500;display:flex;align-items:center;gap:.5rem;}
-.sidebar-logo span{font-size:1.3rem;}
+.sidebar-logo{padding:1.4rem 1.2rem;border-bottom:1px solid var(--border);font-family:'LXGW WenKai TC','Noto Serif TC',serif;font-size:1.05rem;color:var(--pink4);font-weight:700;display:flex;align-items:center;gap:.5rem;}
+.sidebar-logo span{font-size:1.2rem;}
+.sidebar-logo .logo-mark{width:30px;height:30px;flex-shrink:0;}
 .sidebar-menu{flex:1;padding:.8rem 0;overflow-y:auto;}
-.menu-item{display:flex;align-items:center;gap:.7rem;padding:.7rem 1.2rem;font-size:.95rem;color:var(--text2);cursor:pointer;border-radius:10px;margin:0 .5rem .1rem;transition:all .18s;border:none;background:none;width:calc(100% - 1rem);font-family:inherit;text-align:left;}
+.menu-item{display:flex;align-items:center;gap:.7rem;padding:.65rem 1.2rem;font-size:.85rem;color:var(--text2);cursor:pointer;border-radius:10px;margin:0 .5rem .1rem;transition:all .18s;border:none;background:none;width:calc(100% - 1rem);font-family:inherit;text-align:left;}
 .menu-item:hover{background:var(--pink);color:var(--pink4);}
 .menu-item.active{background:var(--pink4);color:#fff;}
-.menu-item .icon{font-size:1.1rem;width:20px;text-align:center;}
+.menu-item .icon{font-size:1rem;width:20px;text-align:center;}
 .sidebar-footer{padding:1rem 1.2rem;border-top:1px solid var(--border);}
-.back-link{display:flex;align-items:center;gap:.5rem;color:var(--text2);font-size:.9rem;text-decoration:none;padding:.5rem .7rem;border-radius:8px;transition:background .2s;}
+.back-link{display:flex;align-items:center;gap:.5rem;color:var(--text2);font-size:.82rem;text-decoration:none;padding:.5rem .7rem;border-radius:8px;transition:background .2s;}
 .back-link:hover{background:var(--pink);color:var(--pink4);}
 
 /* ── Main ── */
 .main{margin-left:var(--sidebar);flex:1;min-height:100vh;display:flex;flex-direction:column;}
 .topbar{background:#fff;border-bottom:1.5px solid var(--border);padding:.9rem 2rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;}
-.topbar-title{font-family:'Noto Serif TC',serif;font-size:1.15rem;color:var(--text);font-weight:500;}
+.topbar-title{font-family:'Noto Serif TC',serif;font-size:1.05rem;color:var(--text);font-weight:500;}
 .topbar-actions{display:flex;gap:.7rem;align-items:center;}
 .content{padding:2rem;flex:1;}
 .panel{display:none;}
@@ -42,35 +43,35 @@ body{font-family:'Zen Maru Gothic',sans-serif;background:#f5f0f3;color:var(--tex
 .stat-card{background:#fff;border-radius:14px;border:1px solid var(--border);padding:1.2rem 1.4rem;cursor:pointer;transition:box-shadow .2s;}
 .stat-card:hover{box-shadow:0 4px 16px rgba(180,100,130,.12);}
 .stat-icon{font-size:1.5rem;margin-bottom:.5rem;}
-.stat-value{font-size:1.7rem;font-weight:600;color:var(--pink4);font-family:'Noto Serif TC',serif;}
-.stat-label{font-size:.85rem;color:var(--text2);margin-top:.15rem;}
+.stat-value{font-size:1.6rem;font-weight:600;color:var(--pink4);font-family:'Noto Serif TC',serif;}
+.stat-label{font-size:.78rem;color:var(--text2);margin-top:.15rem;}
 
 /* ── Buttons ── */
-.btn{border:none;border-radius:10px;padding:.55rem 1.2rem;font-size:.9rem;cursor:pointer;font-family:inherit;transition:all .18s;display:inline-flex;align-items:center;gap:.4rem;}
+.btn{border:none;border-radius:10px;padding:.5rem 1.1rem;font-size:.83rem;cursor:pointer;font-family:inherit;transition:all .18s;display:inline-flex;align-items:center;gap:.4rem;}
 .btn-pink{background:var(--pink4);color:#fff;}.btn-pink:hover{background:#9a4a65;}
 .btn-outline{background:#fff;color:var(--pink4);border:1.5px solid var(--pink3);}.btn-outline:hover{background:var(--pink);}
 .btn-red{background:var(--red);color:var(--red2);border:1px solid #f5c6c6;}.btn-red:hover{background:#f5c6c6;}
 .btn-green{background:var(--green);color:var(--green2);border:1px solid #c8e6c9;}.btn-green:hover{background:#c8e6c9;}
-.btn-sm{padding:.4rem .9rem;font-size:.85rem;}
+.btn-sm{padding:.35rem .8rem;font-size:.78rem;}
 
 /* ── Table ── */
 .table-wrap{background:#fff;border-radius:14px;border:1px solid var(--border);overflow:hidden;}
 .table-header{padding:1rem 1.4rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
-.table-header h3{font-size:1rem;font-weight:500;color:var(--text);}
+.table-header h3{font-size:.92rem;font-weight:500;color:var(--text);}
 table{width:100%;border-collapse:collapse;}
-th{background:var(--cream);font-size:.85rem;color:var(--text2);font-weight:500;padding:.75rem 1rem;text-align:left;border-bottom:1px solid var(--border);}
-td{font-size:.9rem;color:var(--text);padding:.85rem 1rem;border-bottom:1px solid #f5eef2;vertical-align:middle;}
+th{background:var(--cream);font-size:.78rem;color:var(--text2);font-weight:500;padding:.7rem 1rem;text-align:left;border-bottom:1px solid var(--border);}
+td{font-size:.83rem;color:var(--text);padding:.8rem 1rem;border-bottom:1px solid #f5eef2;vertical-align:middle;}
 tr:last-child td{border-bottom:none;}
 tr:hover td{background:#fdf5f8;}
 tr[onclick]:hover td{background:#fdf0f5;cursor:pointer;}
-.td-img{width:48px;height:48px;border-radius:8px;background:linear-gradient(135deg,var(--pink),var(--pink2));display:flex;align-items:center;justify-content:center;font-size:1.4rem;overflow:hidden;flex-shrink:0;}
+.td-img{width:44px;height:44px;border-radius:8px;background:linear-gradient(135deg,var(--pink),var(--pink2));display:flex;align-items:center;justify-content:center;font-size:1.4rem;overflow:hidden;flex-shrink:0;}
 .td-img img{width:100%;height:100%;object-fit:cover;}
-.badge{display:inline-block;font-size:.78rem;border-radius:8px;padding:.2rem .7rem;font-weight:500;}
+.badge{display:inline-block;font-size:.7rem;border-radius:8px;padding:.18rem .6rem;font-weight:500;}
 .badge-dress{background:#fce4ec;color:#c2185b;}
 .badge-blind{background:#e8eaf6;color:#3949ab;}
 .badge-acc{background:#e0f2f1;color:#00796b;}
 .badge-sale{background:#fff3e0;color:#e65100;}
-.featured-toggle{cursor:pointer;font-size:1.2rem;background:none;border:none;transition:transform .2s;}
+.featured-toggle{cursor:pointer;font-size:1.1rem;background:none;border:none;transition:transform .2s;}
 .featured-toggle:hover{transform:scale(1.2);}
 
 /* ── Modal / Drawer ── */
@@ -79,37 +80,36 @@ tr[onclick]:hover td{background:#fdf0f5;cursor:pointer;}
 .drawer{position:fixed;top:0;right:0;height:100%;width:min(540px,100%);background:#fff;z-index:201;transform:translateX(100%);transition:transform .35s cubic-bezier(.32,.72,0,1);overflow-y:auto;display:flex;flex-direction:column;}
 .drawer.open{transform:translateX(0);}
 .drawer-head{padding:1rem 1.4rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;z-index:5;}
-.drawer-head h2{font-size:1.05rem;font-weight:500;font-family:'Noto Serif TC',serif;color:var(--pink4);}
-.drawer-close{background:var(--pink);border:none;border-radius:50%;width:34px;height:34px;cursor:pointer;font-size:1.1rem;color:var(--pink4);}
+.drawer-head h2{font-size:.98rem;font-weight:500;font-family:'Noto Serif TC',serif;color:var(--pink4);}
+.drawer-close{background:var(--pink);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:1rem;color:var(--pink4);}
 .drawer-body{padding:1.4rem;flex:1;}
 .drawer-footer{padding:1rem 1.4rem;border-top:1px solid var(--border);display:flex;gap:.8rem;justify-content:flex-end;position:sticky;bottom:0;background:#fff;}
 
 /* ── Form ── */
 .fg{margin-bottom:1.1rem;}
-.fg label{display:block;font-size:.88rem;color:var(--text2);margin-bottom:.35rem;font-weight:500;}
-.fg input,.fg textarea,.fg select{width:100%;border:1.5px solid var(--border);border-radius:10px;padding:.6rem .9rem;font-size:.9rem;font-family:inherit;color:var(--text);background:var(--cream);outline:none;transition:border-color .2s;}
+.fg label{display:block;font-size:.8rem;color:var(--text2);margin-bottom:.35rem;font-weight:500;}
+.fg input,.fg textarea,.fg select{width:100%;border:1.5px solid var(--border);border-radius:10px;padding:.55rem .85rem;font-size:.85rem;font-family:inherit;color:var(--text);background:var(--cream);outline:none;transition:border-color .2s;}
 .fg input:focus,.fg textarea:focus,.fg select:focus{border-color:var(--pink3);}
 .fg textarea{resize:vertical;min-height:80px;}
 .fg-row{display:grid;grid-template-columns:1fr 1fr;gap:.8rem;}
-.fg-hint{font-size:.78rem;color:var(--text2);margin-top:.25rem;}
+.fg-hint{font-size:.72rem;color:var(--text2);margin-top:.25rem;}
 
 /* ── 圖片上傳 ── */
 .img-upload-area{border:2px dashed var(--border);border-radius:12px;padding:1.2rem;text-align:center;cursor:pointer;transition:border-color .2s;background:var(--cream);}
 .img-upload-area:hover{border-color:var(--pink3);}
 .img-upload-area input{display:none;}
 .img-upload-icon{font-size:2rem;margin-bottom:.4rem;}
-.img-upload-text{font-size:.88rem;color:var(--text2);}
+.img-upload-text{font-size:.82rem;color:var(--text2);}
 .img-preview-list{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:.8rem;}
 .img-preview-item{position:relative;width:80px;height:80px;border-radius:10px;overflow:hidden;border:2px solid var(--border);background:linear-gradient(135deg,var(--pink),var(--pink2));display:flex;align-items:center;justify-content:center;font-size:1.8rem;cursor:grab;transition:opacity .2s,transform .2s;}
 .img-preview-item.dragging{opacity:.4;transform:scale(.95);}
 .img-preview-item.drag-over{border-color:var(--pink4);transform:scale(1.05);}
 .img-preview-item img{width:100%;height:100%;object-fit:cover;pointer-events:none;}
-.img-preview-item .img-del{position:absolute;top:2px;right:2px;background:rgba(0,0,0,.55);color:#fff;border:none;border-radius:50%;width:20px;height:20px;font-size:.7rem;cursor:pointer;display:flex;align-items:center;justify-content:center;}
-.img-preview-item .img-main-badge{position:absolute;bottom:0;left:0;right:0;background:rgba(184,92,120,.85);color:#fff;font-size:.65rem;text-align:center;padding:1px;}
-.img-drag-hint{font-size:.78rem;color:var(--text2);margin-top:.4rem;}
+.img-preview-item .img-del{position:absolute;top:2px;right:2px;background:rgba(0,0,0,.55);color:#fff;border:none;border-radius:50%;width:18px;height:18px;font-size:.65rem;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.img-preview-item .img-main-badge{position:absolute;bottom:0;left:0;right:0;background:rgba(184,92,120,.85);color:#fff;font-size:.6rem;text-align:center;padding:1px;}
+.img-drag-hint{font-size:.72rem;color:var(--text2);margin-top:.4rem;}
 
 /* ── 規格編輯器 ── */
-.variant-group{background:var(--cream);border-radius:10px;padding:.8rem;margin-bottom:.6rem;border:1px solid var(--border);}
 .variant-item{background:#fff;border-radius:12px;border:1.5px solid var(--border);padding:.8rem;margin-bottom:.6rem;display:flex;flex-direction:column;gap:.6rem;}
 .variant-item-head{display:flex;align-items:center;gap:.6rem;}
 .variant-item-img{width:56px;height:56px;border-radius:8px;background:linear-gradient(135deg,var(--pink),var(--pink2));display:flex;align-items:center;justify-content:center;font-size:1.4rem;overflow:hidden;flex-shrink:0;cursor:pointer;border:2px dashed var(--border);transition:border-color .2s;}
@@ -147,6 +147,14 @@ tr[onclick]:hover td{background:#fdf0f5;cursor:pointer;}
   .main{margin-left:0;}
   .stat-grid{grid-template-columns:1fr 1fr;}
   .content{padding:1rem;}
+  .topbar{padding:.7rem 1rem;}
+  .topbar-title{font-size:1rem;}
+  table{display:block;overflow-x:auto;}
+  .drawer{width:100%;}
+  .confirm-box{width:95%;}
+  .fg-row{grid-template-columns:1fr;}
+  .variant-item-row{grid-template-columns:1fr 1fr;}
+  #admin-user{display:none;}
 }
 </style>
 </head>
@@ -154,7 +162,7 @@ tr[onclick]:hover td{background:#fdf0f5;cursor:pointer;}
 
 <!-- Sidebar -->
 <aside class="sidebar">
-  <div class="sidebar-logo"><span>🐱</span> 後台管理</div>
+  <div class="sidebar-logo"><img src="sakura-cat-logo.svg" class="logo-mark" alt="櫻花喵"> 後台管理</div>
   <nav class="sidebar-menu">
     <button class="menu-item active" onclick="switchPanel('dashboard',this)"><span class="icon">📊</span> 總覽</button>
     <button class="menu-item" onclick="switchPanel('products',this)"><span class="icon">🛍</span> 商品管理</button>
@@ -427,8 +435,8 @@ tr[onclick]:hover td{background:#fdf0f5;cursor:pointer;}
 <!-- 登入畫面 -->
 <div id="login-screen" style="position:fixed;inset:0;background:var(--cream);z-index:999;display:flex;align-items:center;justify-content:center;">
   <div style="background:#fff;border-radius:20px;border:1px solid var(--border);padding:2.5rem 2rem;text-align:center;max-width:360px;width:90%;">
-    <div style="font-size:2.5rem;margin-bottom:.8rem;">🐱</div>
-    <div style="font-family:'Noto Serif TC',serif;font-size:1.2rem;color:var(--pink4);margin-bottom:.4rem;">櫻花喵後台管理</div>
+    <img src="sakura-cat-logo.svg" alt="櫻花喵" style="width:68px;height:68px;margin-bottom:.8rem;">
+    <div style="font-family:'LXGW WenKai TC','Noto Serif TC',serif;font-weight:700;font-size:1.3rem;color:var(--pink4);margin-bottom:.4rem;">櫻花喵後台管理</div>
     <div style="font-size:.83rem;color:var(--text2);margin-bottom:1.8rem;">請使用管理員帳號登入</div>
     <button id="login-btn" style="display:flex;align-items:center;gap:.8rem;background:#fff;border:1.5px solid var(--border);border-radius:12px;padding:.75rem 1.5rem;font-size:.9rem;cursor:pointer;font-family:inherit;color:var(--text);margin:0 auto;transition:box-shadow .2s;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.1)'" onmouseout="this.style.boxShadow='none'">
       <img src="https://www.google.com/favicon.ico" width="18" height="18">
@@ -574,7 +582,6 @@ function getOrders(){ return _orders; }
 
 async function saveProduct_db(product, id){
   if(id){
-    // 編輯時用 merge:false 但保留 createdAt
     const existing=_products.find(p=>p.id===id);
     const data={...product, createdAt: existing?.createdAt||serverTimestamp()};
     await setDoc(doc(db,'products',id), data);
@@ -858,7 +865,6 @@ function compressImage(dataUrl, maxSize, quality, callback){
     canvas.width=w; canvas.height=h;
     canvas.getContext('2d').drawImage(img,0,0,w,h);
     const result=canvas.toDataURL('image/jpeg', quality);
-    // 如果還是太大，繼續壓縮
     if(result.length>200000 && quality>0.3){
       compressImage(dataUrl, Math.round(maxSize*0.8), quality-0.1, callback);
     } else {
@@ -955,16 +961,13 @@ function handleVariantImg(e,id){
     img.onload=()=>{
       const c=document.createElement('canvas');
       let w=img.width,h=img.height;
-      // 款式縮圖壓很小，只需要 200px
       if(w>200){h=Math.round(h*200/w);w=200;}
       c.width=w;c.height=h;
       c.getContext('2d').drawImage(img,0,0,w,h);
       const data=c.toDataURL('image/jpeg',0.6);
       variantImgs[id]=data;
       const preview=document.getElementById('vimg-preview-'+id);
-      if(preview){
-        preview.outerHTML=`<img src="${data}" id="vimg-preview-${id}" style="width:100%;height:100%;object-fit:cover;">`;
-      }
+      if(preview) preview.outerHTML=`<img src="${data}" id="vimg-preview-${id}" style="width:100%;height:100%;object-fit:cover;">`;
     };
     img.src=ev.target.result;
   };
@@ -1030,7 +1033,6 @@ async function saveProduct(){
   };
 
   try{
-    // 檢查資料大小
     const dataStr=JSON.stringify(product);
     if(dataStr.length>800000){
       toast('❌ 圖片太大，請減少圖片數量或款式圖片','error');
