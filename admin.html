@@ -101,12 +101,15 @@ tr[onclick]:hover td{background:#fdf0f5;cursor:pointer;}
 .img-upload-icon{font-size:2rem;margin-bottom:.4rem;}
 .img-upload-text{font-size:.82rem;color:var(--text2);}
 .img-preview-list{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:.8rem;}
-.img-preview-item{position:relative;width:80px;height:80px;border-radius:10px;overflow:hidden;border:2px solid var(--border);background:linear-gradient(135deg,var(--pink),var(--pink2));display:flex;align-items:center;justify-content:center;font-size:1.8rem;cursor:grab;transition:opacity .2s,transform .2s;}
+.img-preview-item{position:relative;width:92px;height:92px;border-radius:10px;overflow:hidden;border:2px solid var(--border);background:linear-gradient(135deg,var(--pink),var(--pink2));display:flex;align-items:center;justify-content:center;font-size:1.8rem;transition:opacity .2s,transform .2s;}
 .img-preview-item.dragging{opacity:.4;transform:scale(.95);}
 .img-preview-item.drag-over{border-color:var(--pink4);transform:scale(1.05);}
 .img-preview-item img{width:100%;height:100%;object-fit:cover;pointer-events:none;}
 .img-preview-item .img-del{position:absolute;top:2px;right:2px;background:rgba(0,0,0,.55);color:#fff;border:none;border-radius:50%;width:18px;height:18px;font-size:.65rem;cursor:pointer;display:flex;align-items:center;justify-content:center;}
 .img-preview-item .img-main-badge{position:absolute;bottom:0;left:0;right:0;background:rgba(184,92,120,.85);color:#fff;font-size:.6rem;text-align:center;padding:1px;}
+.img-order-btns{position:absolute;top:2px;left:2px;display:flex;flex-direction:column;gap:2px;}
+.img-order-btn{background:rgba(255,255,255,.92);border:none;border-radius:5px;width:20px;height:18px;font-size:.6rem;cursor:pointer;color:var(--pink4);display:flex;align-items:center;justify-content:center;line-height:1;padding:0;box-shadow:0 1px 3px rgba(0,0,0,.2);transition:background .15s;}
+.img-order-btn:hover{background:var(--pink);}
 .img-drag-hint{font-size:.72rem;color:var(--text2);margin-top:.4rem;}
 
 /* ── 規格編輯器 ── */
@@ -425,7 +428,7 @@ tr[onclick]:hover td{background:#fdf0f5;cursor:pointer;}
         <div class="img-upload-text">點擊上傳圖片<br><span style="font-size:.7rem;opacity:.7;">支援 JPG、PNG、WEBP，可一次選多張</span></div>
       </div>
       <div class="img-preview-list" id="img-preview-list"></div>
-      <div class="img-drag-hint" id="img-drag-hint" style="display:none;">☰ 拖曳圖片可調整順序，第一張為主圖</div>
+      <div class="img-drag-hint" id="img-drag-hint" style="display:none;">▲▼ 調整順序，第一張為主圖</div>
     </div>
 
     <!-- 規格 -->
@@ -1185,12 +1188,14 @@ async function saveProduct(){
 
   const editId=document.getElementById('edit-id').value;
   const catVal=document.getElementById('f-cat').value==='__custom__'?'custom':document.getElementById('f-cat').value;
+  const catNameVal=getCatLabel(catVal);
   const isSale=document.getElementById('f-is-sale').checked;
   const product={
     name,
     tags: formSelectedTags,
     tag: formSelectedTags.length ? formSelectedTags.map(t=>t.name).join('・') : getCatLabel(catVal),
     cat: catVal,
+    catName: catNameVal,
     isSale,
     price,
     oldPrice: parseInt(document.getElementById('f-oldprice').value)||0,
@@ -1393,6 +1398,7 @@ window.toggleFeatured=toggleFeatured;
 window.addSpec=addSpec;
 window.handleImgUpload=handleImgUpload;
 window.removeImg=removeImg;
+window.moveImg=moveImg;
 window.imgDragStart=imgDragStart;
 window.imgDragOver=imgDragOver;
 window.imgDrop=imgDrop;
