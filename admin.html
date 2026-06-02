@@ -229,7 +229,7 @@ tr[onclick]:hover td{background:#fdf0f5;cursor:pointer;}
           </div>
         </div>
         <table>
-          <thead><tr><th>圖片</th><th>商品名稱</th><th>類別</th><th>售價</th><th>主打</th><th>操作</th></tr></thead>
+          <thead><tr><th>圖片</th><th>商品名稱</th><th>類別</th><th>價格</th><th>主打</th><th>操作</th></tr></thead>
           <tbody id="product-table"></tbody>
         </table>
         <div id="product-empty" class="empty" style="display:none"><div class="e-icon">🌸</div>目前沒有商品</div>
@@ -380,16 +380,7 @@ tr[onclick]:hover td{background:#fdf0f5;cursor:pointer;}
       </div>
     </div>
 
-    <div class="fg-row">
-      <div class="fg">
-        <label>售價 (NT$) <span style="font-size:.72rem;color:#aaa;font-weight:400;">選填，留空顯示「詢價」</span></label>
-        <input type="number" id="f-price" placeholder="380" min="0">
-      </div>
-      <div class="fg">
-        <label>原價 (NT$)（選填）</label>
-        <input type="number" id="f-oldprice" placeholder="留空表示無折扣" min="0">
-      </div>
-    </div>
+    <div class="fg-hint" style="background:var(--cream);border-radius:10px;padding:.7rem .9rem;margin-bottom:.4rem;">💡 價格請在下方「款式選項」設定。單一價格的商品也請新增一個款式填入價格；多款式不同價時，前後台會自動顯示價格區間（如 NT$180～780）。</div>
 
     <div class="fg">
       <label>商品標籤（彩色）</label>
@@ -681,6 +672,21 @@ function getCatLabel(cat){
 }
 function getCatBadge(cat){ return CAT_BADGE[cat]||'badge-dress'; }
 
+// 價格顯示：有款式顯示區間 NT$min～max，否則用主售價，皆無則「詢價」
+function getPriceText(p){
+  const variants=p.variants||[];
+  const prices=variants
+    .filter(v=>v.price&&v.stock!=='售完')
+    .map(v=>parseInt(v.price)||0)
+    .filter(v=>v>0);
+  if(prices.length){
+    const min=Math.min(...prices), max=Math.max(...prices);
+    return min===max?`NT$${min}`:`NT$${min}～${max}`;
+  }
+  if(p.price) return `NT$${p.price}`+(p.oldPrice?` <s style="color:var(--text2);font-size:.75rem;">NT$${p.oldPrice}</s>`:'');
+  return `<span style="color:var(--text2);font-size:.82rem;">詢價</span>`;
+}
+
 function buildCatSelect(){
   const sel = document.getElementById('f-cat');
   const current = sel.value;
@@ -784,7 +790,7 @@ function renderDashboard(){
     <tr>
       <td><div style="display:flex;align-items:center;gap:.8rem;"><div class="td-img">${p.imgs&&p.imgs[0]?`<img src="${p.imgs[0]}">`:''}</div><span>${p.name}</span></div></td>
       <td><span class="badge ${getCatBadge(p.cat)}">${getCatLabel(p.cat)}</span></td>
-      <td>NT$${p.price}${p.oldPrice?` <s style="color:var(--text2);font-size:.75rem;">NT$${p.oldPrice}</s>`:''}</td>
+      <td>${getPriceText(p)}</td>
       <td>${p.featured?'✓':'—'}</td>
     </tr>`).join('');
 }
@@ -901,7 +907,7 @@ function renderTable(){
       <td><div class="td-img">${p.imgs&&p.imgs[0]?`<img src="${p.imgs[0]}">`:''}</div></td>
       <td style="max-width:200px;">${p.name}</td>
       <td><span class="badge ${getCatBadge(p.cat)}">${getCatLabel(p.cat)}</span></td>
-      <td>NT$${p.price}${p.oldPrice?` <s style="color:var(--text2);font-size:.75rem;">NT$${p.oldPrice}</s>`:''}</td>
+      <td>${getPriceText(p)}</td>
       <td><button class="featured-toggle" onclick="toggleFeatured('${p.id}')" title="${p.featured?'取消主打':'設為主打'}">${p.featured?'⭐':'☆'}</button></td>
       <td>
         <div style="display:flex;gap:.4rem;">
@@ -941,8 +947,6 @@ function openDrawer(reset=true){
     document.getElementById('drawer-title').textContent='新增商品';
     document.getElementById('edit-id').value='';
     ['f-name','f-desc'].forEach(id=>document.getElementById(id).value='');
-    document.getElementById('f-price').value='';
-    document.getElementById('f-oldprice').value='';
     document.getElementById('f-featured').checked=false;
     document.getElementById('f-is-sale').checked=false;
     initFormTagUI();
@@ -973,8 +977,6 @@ function editProduct(id){
   document.getElementById('f-featured').checked=!!p.featured;
   document.getElementById('f-is-sale').checked=!!p.isSale;
   loadProductTagsToForm(p.tags||[]);  document.getElementById('f-cat').value=p.cat;
-  document.getElementById('f-price').value=p.price;
-  document.getElementById('f-oldprice').value=p.oldPrice||'';
   document.getElementById('f-desc').value=p.desc||'';
   document.getElementById('f-featured').checked=!!p.featured;
   editingImgs=[...(p.imgs||[])];
@@ -1181,15 +1183,16 @@ function getSpecs(){
 // ════════════════════════════════════════
 async function saveProduct(){
   const name=document.getElementById('f-name').value.trim();
-  const priceRaw=document.getElementById('f-price').value.trim();
-  const price=priceRaw?parseInt(priceRaw):null;
   if(!name){toast('⚠ 請輸入商品名稱','error');return;}
-
 
   const editId=document.getElementById('edit-id').value;
   const catVal=document.getElementById('f-cat').value==='__custom__'?'custom':document.getElementById('f-cat').value;
   const catNameVal=getCatLabel(catVal);
   const isSale=document.getElementById('f-is-sale').checked;
+  const variants=getVariants();
+  // price 取款式最低價（供排序/相容用），無款式則 null（前台顯示詢價）
+  const vPrices=variants.filter(v=>v.price&&v.stock!=='售完').map(v=>parseInt(v.price)||0).filter(v=>v>0);
+  const price=vPrices.length?Math.min(...vPrices):null;
   const product={
     name,
     tags: formSelectedTags,
@@ -1198,11 +1201,11 @@ async function saveProduct(){
     catName: catNameVal,
     isSale,
     price,
-    oldPrice: parseInt(document.getElementById('f-oldprice').value)||0,
+    oldPrice: 0,
     imgs: [...editingImgs],
     desc: document.getElementById('f-desc').value.trim(),
     specs: getSpecs(),
-    variants: getVariants(),
+    variants: variants,
     featured: document.getElementById('f-featured').checked,
   };
 
