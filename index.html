@@ -24,6 +24,8 @@ nav{background:#ffffff;border-bottom:1.5px solid var(--border);position:sticky;t
 .nav-links{display:flex;gap:2.5rem;list-style:none;position:absolute;left:50%;transform:translateX(-50%);}
 .nav-links a{text-decoration:none;color:var(--text2);font-size:1rem;letter-spacing:.06em;transition:color .2s;}
 .nav-links a:hover{color:var(--pink4);}
+.nav-links .nav-sale{color:#c0392b;font-weight:500;}
+.nav-links .nav-sale:hover{color:#e74c3c;}
 .nav-cart{background:var(--pink4);color:var(--white);border:none;border-radius:20px;padding:.6rem 1.6rem;font-size:1rem;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:.4rem;transition:background .2s;}
 .nav-cart:hover{background:#9a4a65;}
 .hamburger{display:none;flex-direction:column;gap:5px;background:none;border:none;cursor:pointer;padding:.3rem;}
@@ -114,19 +116,16 @@ nav{background:#ffffff;border-bottom:1.5px solid var(--border);position:sticky;t
 .nav-links li{position:relative;}
 .nav-links .has-mega{display:flex;align-items:center;gap:.3rem;}
 .nav-links .has-mega::after{content:'▾';font-size:.7rem;opacity:.6;}
-.mega-menu{position:absolute;top:calc(100% + 14px);left:50%;transform:translateX(-50%) translateY(8px);background:#fff;border:1px solid var(--border);border-radius:16px;box-shadow:0 12px 40px rgba(180,100,130,.16);padding:1.2rem;min-width:340px;opacity:0;pointer-events:none;transition:all .22s ease;z-index:250;}
+.mega-menu{position:absolute;top:calc(100% + 14px);left:50%;transform:translateX(-50%) translateY(8px);background:#fff;border:1px solid var(--border);border-radius:16px;box-shadow:0 12px 40px rgba(180,100,130,.16);padding:1.6rem 1.8rem;opacity:0;pointer-events:none;transition:all .22s ease;z-index:250;}
 .nav-links li:hover .mega-menu{opacity:1;pointer-events:all;transform:translateX(-50%) translateY(0);}
 .mega-menu::before{content:'';position:absolute;top:-14px;left:0;right:0;height:14px;}
-.mega-cats{display:flex;flex-direction:column;gap:.2rem;}
-.mega-cat-link{display:flex;align-items:center;justify-content:space-between;gap:1.5rem;padding:.6rem .9rem;border-radius:10px;font-size:.92rem;color:var(--text);text-decoration:none;cursor:pointer;transition:background .15s;}
-.mega-cat-link:hover{background:var(--pink);color:var(--pink4);}
-.mega-cat-link .mega-count{font-size:.72rem;color:var(--text2);background:var(--cream);border-radius:10px;padding:.1rem .5rem;}
-.mega-cat-link.sale{color:#c0392b;font-weight:500;}
-.mega-cat-link.sale:hover{background:#fff5f5;}
-.mega-divider{height:1px;background:var(--border);margin:.5rem .3rem;}
-.mega-tags{display:flex;flex-wrap:wrap;gap:.35rem;padding:.1rem .9rem .6rem;}
-.mega-tag{font-size:.72rem;border-radius:10px;padding:.15rem .6rem;cursor:pointer;transition:transform .12s,filter .12s;}
-.mega-tag:hover{transform:translateY(-1px);filter:brightness(.96);}
+/* 多欄自適應：分類多就多欄，少就少欄 */
+.mega-cats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,max-content));gap:1.4rem 2.4rem;}
+.mega-col{display:flex;flex-direction:column;gap:.1rem;min-width:120px;}
+.mega-col-title{font-size:.95rem;font-weight:600;color:var(--text);text-decoration:none;cursor:pointer;margin-bottom:.5rem;padding-bottom:.4rem;border-bottom:1px solid var(--border);transition:color .15s;white-space:nowrap;}
+.mega-col-title:hover{color:var(--pink4);}
+.mega-sub{font-size:.83rem;color:var(--text2);text-decoration:none;cursor:pointer;padding:.28rem 0;transition:color .15s;white-space:nowrap;}
+.mega-sub:hover{color:var(--pink4);}
 /* 側滑選單標籤細項 */
 .slide-cat-tags{display:flex;flex-wrap:wrap;gap:.4rem;padding:.6rem 1.3rem .9rem;background:#fcf6f9;border-bottom:1px solid #f7edf2;}
 .slide-cat-tag{font-size:.78rem;border-radius:12px;padding:.25rem .7rem;cursor:pointer;transition:transform .12s;}
@@ -333,6 +332,7 @@ nav{background:#ffffff;border-bottom:1.5px solid var(--border);position:sticky;t
         <a href="javascript:void(0)" class="has-mega" onclick="show('shop');filterByCat('all')">商品</a>
         <div class="mega-menu"><div class="mega-cats" id="megaCats"></div></div>
       </li>
+      <li><a href="javascript:void(0)" class="nav-sale" onclick="goCat('sale')">SALE 特價</a></li>
       <li><a href="javascript:void(0)" onclick="show('about')">關於我們</a></li>
       <li><a href="javascript:void(0)" onclick="show('myorders')">我的訂單</a></li>
     </ul>
@@ -1111,28 +1111,25 @@ function buildMegaMenu(){
   const el=document.getElementById('megaCats');
   if(!el) return;
   const cats=getActiveCats();
-  const saleCount=getSaleCount();
 
-  function tagRowHTML(cat){
-    const tags=getTagsForCat(cat);
-    if(!tags.length) return '';
-    return `<div class="mega-tags">`+tags.map(t=>{
-      const c=TAG_PALETTE_FRONT[t.colorIdx]||TAG_PALETTE_FRONT[0];
-      return `<span class="mega-tag" style="background:${c.bg};color:${c.text};border:1px solid ${c.border};" onclick="goCat('${cat}','${t.name.replace(/'/g,"\\'")}')">${t.name}</span>`;
-    }).join('')+`</div>`;
-  }
-
-  let html=`<a class="mega-cat-link" href="javascript:void(0)" onclick="goCat('all')"><span>全部商品</span><span class="mega-count">${getProducts().length}</span></a>`;
+  // 每個分類一欄：標題 + 底下純文字標籤條列
+  let cols=`<div class="mega-col">
+    <a class="mega-col-title" href="javascript:void(0)" onclick="goCat('all')">全部商品</a>
+    <a class="mega-sub" href="javascript:void(0)" onclick="goCat('all')">看全部 (${getProducts().length})</a>
+  </div>`;
   cats.forEach(c=>{
-    html+=`<a class="mega-cat-link" href="javascript:void(0)" onclick="goCat('${c.cat}')"><span>${c.label}</span><span class="mega-count">${c.count}</span></a>`;
-    html+=tagRowHTML(c.cat);
+    const tags=getTagsForCat(c.cat);
+    let subs=`<a class="mega-sub" href="javascript:void(0)" onclick="goCat('${c.cat}')">全部${c.label} (${c.count})</a>`;
+    tags.forEach(t=>{
+      const name=t.name.replace(/'/g,"\\'");
+      subs+=`<a class="mega-sub" href="javascript:void(0)" onclick="goCat('${c.cat}','${name}')">${t.name}</a>`;
+    });
+    cols+=`<div class="mega-col">
+      <a class="mega-col-title" href="javascript:void(0)" onclick="goCat('${c.cat}')">${c.label}</a>
+      ${subs}
+    </div>`;
   });
-  if(saleCount>0){
-    html+=`<div class="mega-divider"></div>`;
-    html+=`<a class="mega-cat-link sale" href="javascript:void(0)" onclick="goCat('sale')"><span>🏷 SALE 特價專區</span><span class="mega-count">${saleCount}</span></a>`;
-    html+=tagRowHTML('sale');
-  }
-  el.innerHTML=html;
+  el.innerHTML=cols;
 }
 
 // 從選單點分類：先切到商品頁再篩選（可帶標籤）
