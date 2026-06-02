@@ -123,6 +123,11 @@ tr[onclick]:hover td{background:#fdf0f5;cursor:pointer;}
 .variant-item-row{display:grid;grid-template-columns:1fr 1fr;gap:.4rem;}
 .variant-del-btn{background:var(--red);color:var(--red2);border:none;border-radius:8px;padding:.3rem .6rem;cursor:pointer;font-size:.75rem;align-self:flex-start;}
 .variant-hint{font-size:.7rem;color:var(--text2);margin-top:.25rem;}
+.vstock-box{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;background:var(--cream);border:1.5px solid var(--border);border-radius:8px;padding:.4rem .6rem;}
+.vstock-opt{display:flex;align-items:center;gap:.25rem;font-size:.8rem;color:var(--text);cursor:pointer;white-space:nowrap;}
+.vstock-opt input{accent-color:var(--pink4);cursor:pointer;}
+.vstock-opt.soldout{color:#c0392b;}
+.vstock-opt.soldout input{accent-color:#c0392b;}
 .spec-row{display:flex;gap:.5rem;align-items:center;}
 .spec-row input{flex:1;border:1.5px solid var(--border);border-radius:8px;padding:.4rem .7rem;font-size:.82rem;font-family:inherit;background:var(--cream);outline:none;}
 .spec-row input:focus{border-color:var(--pink3);}
@@ -675,8 +680,12 @@ function getCatBadge(cat){ return CAT_BADGE[cat]||'badge-dress'; }
 // 價格顯示：有款式顯示區間 NT$min～max，否則用主售價，皆無則「詢價」
 function getPriceText(p){
   const variants=p.variants||[];
+  const isSoldOut=(v)=>{
+    const t=Array.isArray(v.stockTypes)&&v.stockTypes.length?v.stockTypes:[v.stock||'現貨'];
+    return t.length===1&&t[0]==='售完';
+  };
   const prices=variants
-    .filter(v=>v.price&&v.stock!=='售完')
+    .filter(v=>v.price&&!isSoldOut(v))
     .map(v=>parseInt(v.price)||0)
     .filter(v=>v>0);
   if(prices.length){
@@ -1088,6 +1097,16 @@ function removeImg(i){editingImgs.splice(i,1);renderImgPreviews();}
 // ════════════════════════════════════════
 let variantImgs={};
 
+// 判斷款式是否含某貨況（相容舊的單一 stock 字串與新的 stockTypes 陣列）
+function _vGetStockTypes(data){
+  if(Array.isArray(data.stockTypes)&&data.stockTypes.length) return data.stockTypes;
+  if(data.stock) return [data.stock];
+  return ['現貨'];
+}
+function _vHasStock(data,type){
+  return _vGetStockTypes(data).includes(type);
+}
+
 function addVariantItem(data={}){
   const id='v'+Date.now()+Math.random().toString(36).slice(2,6);
   const item=document.createElement('div');
@@ -1103,11 +1122,11 @@ function addVariantItem(data={}){
         <input type="text" placeholder="款式名稱（如：藍水母）" value="${data.name||''}" data-field="name">
         <div class="variant-item-row">
           <input type="number" placeholder="價格 NT$" value="${data.price||''}" min="0" data-field="price">
-          <select data-field="stock">
-            <option value="現貨" ${(data.stock||'現貨')==='現貨'?'selected':''}>現貨</option>
-            <option value="預購" ${data.stock==='預購'?'selected':''}>預購</option>
-            <option value="售完" ${data.stock==='售完'?'selected':''}>售完</option>
-          </select>
+          <div class="vstock-box" data-field="stockbox">
+            <label class="vstock-opt"><input type="checkbox" data-stock="現貨" ${_vHasStock(data,'現貨')?'checked':''}> 現貨</label>
+            <label class="vstock-opt"><input type="checkbox" data-stock="預購" ${_vHasStock(data,'預購')?'checked':''}> 預購</label>
+            <label class="vstock-opt soldout"><input type="checkbox" data-stock="售完" ${_vHasStock(data,'售完')?'checked':''}> 售完</label>
+          </div>
         </div>
       </div>
       <button class="variant-del-btn" onclick="this.closest('.variant-item').remove()">✕</button>
@@ -1149,10 +1168,14 @@ function getVariants(){
     const id=item.dataset.vid;
     const name=item.querySelector('[data-field="name"]')?.value.trim()||'';
     const price=parseInt(item.querySelector('[data-field="price"]')?.value)||0;
-    const stock=item.querySelector('[data-field="stock"]')?.value||'現貨';
+    // 複選貨況
+    const stockTypes=[...item.querySelectorAll('[data-stock]:checked')].map(c=>c.dataset.stock);
+    if(!stockTypes.length) stockTypes.push('現貨');
+    // stock 欄位保留相容：售完優先標示，否則取第一個
+    const stock=stockTypes.includes('售完')&&stockTypes.length===1?'售完':stockTypes.find(s=>s!=='售完')||stockTypes[0];
     const img=variantImgs[id]||'';
     if(!name) return null;
-    return {name, price, stock, img};
+    return {name, price, stock, stockTypes, img};
   }).filter(Boolean);
 }
 
