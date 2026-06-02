@@ -750,7 +750,7 @@ function getProducts(){ return _products; }
 // 購物車
 // ════════════════════════════════════════
 let cart=[];
-function addToCart(productId, variantIdx=null){
+function addToCart(productId, variantIdx=null, stock=null){
   const products=getProducts();
   const p=products.find(x=>x.id===productId);
   if(!p) return;
@@ -760,12 +760,14 @@ function addToCart(productId, variantIdx=null){
   }
   const variant=variantIdx!==null&&p.variants?p.variants[variantIdx]:null;
   const price=parseInt(variant?.price)||p.price;
-  const name=variant?`${p.name}（${variant.name}）`:p.name;
+  // 貨況標註（現貨不標、預購標出來提醒）
+  const stockLabel = stock && stock!=='現貨' ? `・${stock}` : '';
+  const name=variant?`${p.name}（${variant.name}${stockLabel}）`:p.name;
   const img=variant?.img||(p.imgs&&p.imgs[0])||'';
-  const cartKey=variant?`${productId}_${variantIdx}`:productId;
+  const cartKey=variant?`${productId}_${variantIdx}_${stock||''}`:productId;
   const existing=cart.find(x=>x.cartKey===cartKey);
   if(existing) existing.qty++;
-  else cart.push({cartKey, id:productId, name, price, imgs:img?[img]:p.imgs||[], qty:1});
+  else cart.push({cartKey, id:productId, name, price, stock:stock||'', imgs:img?[img]:p.imgs||[], qty:1});
   updateCartCount();
   showToast(`已加入：${name}`, '✓');
 }
@@ -829,8 +831,12 @@ function showToast(msg='已加入購物車！', icon='🛒', isError=false){
 const CAT_LABEL={dress:'娃衣',blind:'盲盒',acc:'配件',sale:'特價'};
 function getPriceDisplay(p){
   const variants=p.variants||[];
+  const isSoldOut=(v)=>{
+    const t=Array.isArray(v.stockTypes)&&v.stockTypes.length?v.stockTypes:[v.stock||'現貨'];
+    return t.length===1&&t[0]==='售完';
+  };
   const variantPrices=variants
-    .filter(v=>v.price&&v.stock!=='售完')
+    .filter(v=>v.price&&!isSoldOut(v))
     .map(v=>parseInt(v.price)||0)
     .filter(v=>v>0);
   if(variantPrices.length===0){
@@ -1196,18 +1202,22 @@ function openModal(productId){
     return `<div class="modal-spec"><div class="modal-spec-label">${l}</div><div class="modal-spec-value">${v}</div></div>`;
   }).join('');
   document.getElementById('modal-add-btn').onclick=()=>addToCart(productId);
+  // 取得款式的貨況清單（相容舊單一 stock 與新 stockTypes 陣列）
+  const vStockTypes=(v)=>{
+    if(Array.isArray(v.stockTypes)&&v.stockTypes.length) return v.stockTypes;
+    return [v.stock||'現貨'];
+  };
+  const vIsSoldOut=(v)=>{ const t=vStockTypes(v); return t.length===1&&t[0]==='售完'; };
   // 蝦皮風格款式選項
   const variants=p.variants||[];
   const variantEl=document.getElementById('modal-variants');
   if(variants.length){
-    // 收集所有不重複的貨況
-    const stockTypes=[...new Set(variants.map(v=>v.stock||'現貨'))];
     variantEl.innerHTML=`
       <div class="modal-variant">
         <div class="modal-variant-label">款式</div>
         <div class="modal-variant-options" id="modal-variant-btns">
           ${variants.map((v,i)=>`
-            <button class="variant-btn ${v.stock==='售完'?'variant-sold-out':''}" type="button" data-idx="${i}" data-stock="${v.stock||'現貨'}" ${v.stock==='售完'?'disabled':''}>
+            <button class="variant-btn ${vIsSoldOut(v)?'variant-sold-out':''}" type="button" data-idx="${i}" ${vIsSoldOut(v)?'disabled':''}>
               ${v.img?`<img src="${v.img}" style="width:48px;height:48px;border-radius:8px;object-fit:cover;margin-right:.5rem;vertical-align:middle;">`:''}
               <span>${v.name}</span>
             </button>`).join('')}
@@ -1219,40 +1229,76 @@ function openModal(productId){
       </div>
       <div id="modal-variant-info" style="font-size:.85rem;color:var(--text2);margin-top:.5rem;min-height:1.2rem;padding:.4rem .6rem;background:var(--cream);border-radius:8px;display:none;"></div>`;
 
-    variantEl.onclick=function(e){
-      const btn=e.target.closest('#modal-variant-btns .variant-btn');
-      if(!btn||btn.disabled) return;
-      document.querySelectorAll('#modal-variant-btns .variant-btn').forEach(b=>b.classList.remove('selected'));
-      btn.classList.add('selected');
-      const idx=parseInt(btn.dataset.idx);
-      const v=variants[idx];
-      const stock=v.stock||'現貨';
-      const price=parseInt(v.price)||p.price;
+    let selVariantIdx=null, selStock=null;
 
-      // 更新貨況列
-      const stockRow=document.getElementById('modal-stock-row');
-      const stockBtns=document.getElementById('modal-stock-btns');
-      stockRow.style.display='block';
-      stockBtns.innerHTML=`
-        <button class="stock-btn ${stock==='預購'?'preorder':stock==='售完'?'soldout':'instock'} selected" disabled>
-          ${stock==='預購'?'預購（請先聯聊，勿直接下單！）':stock==='售完'?'售完':'現貨（可直接下單）'}
-        </button>`;
-
-      // 更新價格
-      const priceEl=document.getElementById('modal-price');
-      if(priceEl) priceEl.innerHTML=p.oldPrice?`NT$${price} <s>NT$${p.oldPrice}</s>`:`NT$${price}`;
-
-      // 更新已選資訊
-      const info=document.getElementById('modal-variant-info');
-      if(info){
-        info.style.display='block';
-        info.textContent=`✓ 已選：${v.name}　NT$${price}`;
-      }
-
-      // 更新加入購物車
+    function refreshAddState(){
       const addBtn=document.getElementById('modal-add-btn');
-      addBtn.dataset.selectedIdx=idx;
-      addBtn.onclick=function(){addToCart(productId, parseInt(this.dataset.selectedIdx));};
+      const info=document.getElementById('modal-variant-info');
+      if(selVariantIdx===null){ return; }
+      const v=variants[selVariantIdx];
+      const price=parseInt(v.price)||p.price;
+      const types=vStockTypes(v).filter(t=>t!=='售完');
+      // 需要選貨況但還沒選
+      const needStock = types.length>1;
+      if(needStock && !selStock){
+        info.style.display='block';
+        info.textContent=`請選擇「${v.name}」的貨況`;
+        addBtn.textContent='請先選擇貨況';
+        addBtn.disabled=true; addBtn.style.opacity='.5';
+        return;
+      }
+      const finalStock = selStock || types[0] || '現貨';
+      info.style.display='block';
+      info.textContent=`✓ 已選：${v.name}（${finalStock}）　NT$${price}`;
+      addBtn.textContent= finalStock==='預購' ? '預購下單（請先聯繫）+' : '加入購物車 +';
+      addBtn.disabled=false; addBtn.style.opacity='';
+      addBtn.onclick=function(){ addToCart(productId, selVariantIdx, finalStock); };
+    }
+
+    variantEl.onclick=function(e){
+      // 點款式
+      const btn=e.target.closest('#modal-variant-btns .variant-btn');
+      if(btn && !btn.disabled){
+        document.querySelectorAll('#modal-variant-btns .variant-btn').forEach(b=>b.classList.remove('selected'));
+        btn.classList.add('selected');
+        selVariantIdx=parseInt(btn.dataset.idx);
+        selStock=null;
+        const v=variants[selVariantIdx];
+        const price=parseInt(v.price)||p.price;
+        // 價格更新
+        const priceEl=document.getElementById('modal-price');
+        if(priceEl) priceEl.innerHTML=p.oldPrice?`NT$${price} <s>NT$${p.oldPrice}</s>`:`NT$${price}`;
+        // 貨況列：可選的貨況（排除售完）
+        const types=vStockTypes(v).filter(t=>t!=='售完');
+        const stockRow=document.getElementById('modal-stock-row');
+        const stockBtns=document.getElementById('modal-stock-btns');
+        if(types.length>1){
+          // 多貨況 → 讓客人點選
+          stockRow.style.display='block';
+          stockBtns.innerHTML=types.map(t=>`
+            <button class="stock-btn ${t==='預購'?'preorder':'instock'} stock-pick" type="button" data-stock="${t}">
+              ${t==='預購'?'預購':'現貨'}
+            </button>`).join('');
+        } else if(types.length===1){
+          // 單一貨況 → 直接顯示不可點
+          selStock=types[0];
+          stockRow.style.display='block';
+          stockBtns.innerHTML=`<button class="stock-btn ${types[0]==='預購'?'preorder':'instock'}" disabled>
+            ${types[0]==='預購'?'預購（請先聯繫，勿直接下單！）':'現貨（可直接下單）'}</button>`;
+        } else {
+          stockRow.style.display='none';
+        }
+        refreshAddState();
+        return;
+      }
+      // 點貨況
+      const sBtn=e.target.closest('.stock-pick');
+      if(sBtn){
+        document.querySelectorAll('.stock-pick').forEach(b=>b.classList.remove('selected'));
+        sBtn.classList.add('selected');
+        selStock=sBtn.dataset.stock;
+        refreshAddState();
+      }
     };
   } else {
     variantEl.innerHTML='';
