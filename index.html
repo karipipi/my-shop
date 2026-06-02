@@ -252,6 +252,13 @@ nav{background:#ffffff;border-bottom:1.5px solid var(--border);position:sticky;t
 .stock-btn.instock{background:linear-gradient(135deg,#e8f5e9,#c8e6c9);color:#2e7d32;}
 .stock-btn.preorder{background:linear-gradient(135deg,#fff3e0,#ffe0b2);color:#e65100;}
 .stock-btn.soldout{background:linear-gradient(135deg,#fdecea,#f5c6c6);color:#c62828;}
+/* 可點選的貨況按鈕 */
+.stock-pick{cursor:pointer;border:2px solid transparent;position:relative;transition:all .18s;opacity:.78;}
+.stock-pick:hover{opacity:1;transform:translateY(-1px);}
+.stock-pick.selected{opacity:1;}
+.stock-pick.instock.selected{border-color:#2e7d32;box-shadow:0 2px 10px rgba(46,125,50,.25);}
+.stock-pick.preorder.selected{border-color:#e65100;box-shadow:0 2px 10px rgba(230,81,0,.25);}
+.stock-pick.selected::after{content:'✓';margin-left:.4rem;font-weight:700;}
 .modal-product-name{font-family:'Noto Serif TC',serif;font-size:1.4rem;font-weight:500;color:var(--text);margin-bottom:.4rem;}
 .modal-product-price{color:var(--pink4);font-size:1.3rem;font-weight:500;margin-bottom:1rem;}
 .modal-product-price s{color:var(--text2);font-size:.95rem;margin-left:.5rem;font-weight:400;}
@@ -760,16 +767,21 @@ function addToCart(productId, variantIdx=null, stock=null){
   }
   const variant=variantIdx!==null&&p.variants?p.variants[variantIdx]:null;
   const price=parseInt(variant?.price)||p.price;
-  // 貨況標註（現貨不標、預購標出來提醒）
-  const stockLabel = stock && stock!=='現貨' ? `・${stock}` : '';
-  const name=variant?`${p.name}（${variant.name}${stockLabel}）`:p.name;
+  const name=variant?`${p.name}（${variant.name}）`:p.name;
   const img=variant?.img||(p.imgs&&p.imgs[0])||'';
   const cartKey=variant?`${productId}_${variantIdx}_${stock||''}`:productId;
   const existing=cart.find(x=>x.cartKey===cartKey);
   if(existing) existing.qty++;
   else cart.push({cartKey, id:productId, name, price, stock:stock||'', imgs:img?[img]:p.imgs||[], qty:1});
   updateCartCount();
-  showToast(`已加入：${name}`, '✓');
+  showToast(`已加入：${name}${stock&&stock!=='現貨'?'・'+stock:''}`, '✓');
+}
+
+// 貨況彩色小徽章
+function stockBadgeHTML(stock){
+  if(!stock) return '';
+  if(stock==='預購') return `<span style="display:inline-block;font-size:.68rem;background:#fff3e0;color:#e65100;border:1px solid #ffd9a8;border-radius:8px;padding:.05rem .45rem;margin-left:.4rem;vertical-align:middle;">預購</span>`;
+  return `<span style="display:inline-block;font-size:.68rem;background:#e8f5e9;color:#2e7d32;border:1px solid #b6e0ba;border-radius:8px;padding:.05rem .45rem;margin-left:.4rem;vertical-align:middle;">現貨</span>`;
 }
 function updateCartCount(){
   const count=cart.reduce((s,x)=>s+x.qty,0);
@@ -789,7 +801,7 @@ function renderCart(){
       :`${item.emoji||'🌸'}`;
     return `<div class="cart-item">
       <div class="cart-thumb">${thumb}</div>
-      <div class="cart-item-info"><div class="cart-item-name">${item.name}</div><div class="cart-item-price">NT$${item.price}</div></div>
+      <div class="cart-item-info"><div class="cart-item-name">${item.name}${stockBadgeHTML(item.stock)}</div><div class="cart-item-price">NT$${item.price}</div></div>
       <div class="qty-control">
         <button class="qty-btn" onclick="changeQty('${item.cartKey}',-1)">-</button>
         <span style="font-size:.88rem;min-width:20px;text-align:center;">${item.qty}</span>
@@ -1440,7 +1452,7 @@ window.submitOrder=async function(){
     store:(shipVal==='711'||shipVal==='family')?document.getElementById('o-store').value.trim():'',
     payment:payVal, paymentLabel:payLabel[payVal],
     note:document.getElementById('o-note').value.trim(),
-    items:cart.map(x=>({id:x.id,name:x.name,price:x.price,qty:x.qty,img:x.imgs&&x.imgs[0]?x.imgs[0]:''})),
+    items:cart.map(x=>({id:x.id,name:x.name,price:x.price,qty:x.qty,stock:x.stock||'',img:x.imgs&&x.imgs[0]?x.imgs[0]:''})),
     subtotal:sub, shipFee, total,
     status:'待確認', payStatus:'未付款',
     createdAt:serverTimestamp(),
@@ -1453,7 +1465,7 @@ window.submitOrder=async function(){
       <div style="width:48px;height:48px;border-radius:8px;background:linear-gradient(135deg,var(--pink),var(--pink2));display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;">
         ${item.imgs&&item.imgs[0]?`<img src="${item.imgs[0]}" style="width:100%;height:100%;object-fit:cover;">`:'🌸'}
       </div>
-      <div style="flex:1;font-size:.88rem;color:var(--text);">${item.name}</div>
+      <div style="flex:1;font-size:.88rem;color:var(--text);">${item.name}${stockBadgeHTML(item.stock)}</div>
       <div style="font-size:.85rem;color:var(--text2);">x${item.qty}</div>
       <div style="font-size:.9rem;color:var(--pink4);font-weight:500;">NT$${item.price*item.qty}</div>
     </div>`).join('');
@@ -1512,7 +1524,7 @@ function renderOrderCards(result){
           <div style="width:40px;height:40px;border-radius:8px;background:linear-gradient(135deg,var(--pink),var(--pink2));overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;">
             ${item.img?`<img src="${item.img}" style="width:100%;height:100%;object-fit:cover;">`:'🌸'}
           </div>
-          <div style="flex:1;font-size:.82rem;">${item.name}</div>
+          <div style="flex:1;font-size:.82rem;">${item.name}${stockBadgeHTML(item.stock)}</div>
           <div style="font-size:.8rem;color:var(--text2);">x${item.qty}</div>
           <div style="font-size:.85rem;color:var(--pink4);font-weight:500;">NT$${item.price*item.qty}</div>
         </div>`).join('')}
@@ -1545,7 +1557,7 @@ window.openOrderPanel=function(idx){
         ${item.img?`<img src="${item.img}" style="width:100%;height:100%;object-fit:cover;">`:'🌸'}
       </div>
       <div style="flex:1;">
-        <div style="font-size:.88rem;color:var(--text);margin-bottom:.2rem;">${item.name}</div>
+        <div style="font-size:.88rem;color:var(--text);margin-bottom:.2rem;">${item.name}${stockBadgeHTML(item.stock)}</div>
         <div style="font-size:.8rem;color:var(--text2);">單價 NT$${item.price} × ${item.qty}</div>
       </div>
       <div style="font-size:.95rem;color:var(--pink4);font-weight:500;">NT$${item.price*item.qty}</div>
