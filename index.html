@@ -76,6 +76,18 @@ nav{background:#ffffff;border-bottom:1.5px solid var(--border);position:sticky;t
 .btn-outline:hover{background:var(--pink);transform:translateY(-1px);}
 .section-title{font-family:'Noto Serif TC',serif;font-size:1.3rem;font-weight:500;color:var(--pink4);text-align:center;margin-bottom:.4rem;}
 .section-sub{text-align:center;color:var(--text2);font-size:.85rem;margin-bottom:1.8rem;}
+/* 醒目大標題（商品頁人氣商品用）*/
+.hero-title{text-align:center;margin:1.5rem 0 .4rem;}
+.hero-title .ht-main{font-family:'Noto Serif TC',serif;font-size:2.2rem;font-weight:500;color:var(--pink4);letter-spacing:.08em;display:inline-flex;align-items:center;gap:.8rem;position:relative;}
+.hero-title .ht-main::before,.hero-title .ht-main::after{content:'';width:42px;height:2px;background:linear-gradient(90deg,transparent,var(--pink3));border-radius:2px;}
+.hero-title .ht-main::after{background:linear-gradient(90deg,var(--pink3),transparent);}
+.hero-title .ht-deco{font-size:1.4rem;}
+.hero-sub{text-align:center;color:var(--text2);font-size:.92rem;margin-bottom:2rem;letter-spacing:.04em;}
+.hero-sub .hs-pill{display:inline-block;background:var(--pink);color:var(--pink4);border-radius:14px;padding:.25rem .9rem;font-size:.82rem;margin-top:.2rem;}
+@media(max-width:768px){
+  .hero-title .ht-main{font-size:1.6rem;gap:.5rem;}
+  .hero-title .ht-main::before,.hero-title .ht-main::after{width:24px;}
+}
 .product-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1.2rem;margin-bottom:2.5rem;}
 .product-card{background:#ffffff;border-radius:16px;border:1px solid var(--border);overflow:hidden;transition:all .25s;cursor:pointer;}
 /* 滾動進場動畫 */
@@ -438,8 +450,8 @@ nav{background:#ffffff;border-bottom:1.5px solid var(--border);position:sticky;t
 </div>
 <!-- SHOP -->
 <div class="page" id="shop">
-  <div class="section-title" style="margin-top:1rem;">人氣商品</div>
-  <div class="section-sub">滿1200元免運費 ✿</div>
+  <div class="hero-title"><span class="ht-main"><span class="ht-deco">🌸</span>人氣商品<span class="ht-deco">🌸</span></span></div>
+  <div class="hero-sub"><span class="hs-pill">✿ 滿 1200 元免運費 ✿</span></div>
   <!-- 手機：分類按鈕 -->
   <div class="shop-mobile-bar">
     <button class="shop-mobile-cat-btn" onclick="openSlideCat()">☰ 分類選單</button>
