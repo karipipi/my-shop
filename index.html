@@ -434,8 +434,9 @@ nav{background:#ffffff;border-bottom:1.5px solid var(--border);position:sticky;t
 <div class="page" id="myorders">
   <div style="margin-top:1rem;max-width:600px;margin-left:auto;margin-right:auto;">
     <div class="section-title">我的訂單</div>
-    <div class="section-sub">輸入 Email 查詢訂單 ✿</div>
-    <div style="background:#fff;border-radius:16px;border:1px solid var(--border);padding:1.4rem;margin-bottom:1.2rem;">
+    <div class="section-sub" id="myorders-sub">輸入 Email 查詢訂單 ✿</div>
+    <!-- 訪客查詢框（登入後自動隱藏）-->
+    <div id="orders-query-box" style="background:#fff;border-radius:16px;border:1px solid var(--border);padding:1.4rem;margin-bottom:1.2rem;">
       <div style="display:flex;gap:.6rem;">
         <input type="email" id="query-email" placeholder="請輸入訂購時的 Email" style="flex:1;border:1.5px solid var(--border);border-radius:10px;padding:.6rem .9rem;font-size:.88rem;font-family:inherit;background:var(--cream);outline:none;">
         <button class="btn-primary" onclick="queryOrders()" style="white-space:nowrap;">查詢</button>
@@ -1033,7 +1034,26 @@ function show(id, pushState=true){
   const bannerZone=document.getElementById('home-banner-zone');
   if(bannerZone) bannerZone.style.display=id==='home'?'block':'none';
   if(id==='checkout') renderCart();
+  if(id==='myorders') setupMyOrdersView();
   if(pushState) history.pushState({page:id}, '', '#'+id);
+}
+
+// 進入「我的訂單」：已登入自動撈單，未登入顯示查詢框
+function setupMyOrdersView(){
+  const queryBox=document.getElementById('orders-query-box');
+  const sub=document.getElementById('myorders-sub');
+  if(currentUser&&currentUser.email){
+    // 已登入：隱藏查詢框，自動撈訂單
+    if(queryBox) queryBox.style.display='none';
+    if(sub) sub.textContent='以下是您的訂單紀錄 ✿';
+    const qe=document.getElementById('query-email');
+    if(qe) qe.value=currentUser.email;
+    if(typeof window.queryOrders==='function') window.queryOrders();
+  }else{
+    // 未登入：顯示查詢框
+    if(queryBox) queryBox.style.display='block';
+    if(sub) sub.textContent='輸入 Email 查詢訂單 ✿';
+  }
 }
 
 // 瀏覽器返回/前進鍵
@@ -1511,6 +1531,11 @@ onAuthStateChanged(auth, user=>{
     if(loginView) loginView.style.display='block';
     if(profileView) profileView.style.display='none';
   }
+  // 若正停在訂單頁，依登入狀態即時刷新
+  const myordersPage=document.getElementById('myorders');
+  if(myordersPage&&myordersPage.classList.contains('active')){
+    if(typeof setupMyOrdersView==='function') setupMyOrdersView();
+  }
 });
 
 // 暴露全域函式（module scope 需要）
@@ -1534,6 +1559,7 @@ window.loginGoogle=loginGoogle;
 window.loginLine=loginLine;
 window.logoutMember=logoutMember;
 window.onMemberClick=onMemberClick;
+window.setupMyOrdersView=setupMyOrdersView;
 window.openOrderPanel=window.openOrderPanel;
 window.closeOrderPanel=window.closeOrderPanel;
 
