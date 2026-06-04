@@ -1058,17 +1058,20 @@ function show(id, pushState=true){
 function setupMyOrdersView(){
   const queryBox=document.getElementById('orders-query-box');
   const sub=document.getElementById('myorders-sub');
+  const result=document.getElementById('orders-result');
   if(currentUser&&currentUser.email){
-    // 已登入：隱藏查詢框，自動撈訂單
     if(queryBox) queryBox.style.display='none';
     if(sub) sub.textContent='以下是您的訂單紀錄 ✿';
-    const qe=document.getElementById('query-email');
-    if(qe) qe.value=currentUser.email;
     if(typeof window.queryOrders==='function') window.queryOrders();
   }else{
-    // 未登入：顯示查詢框
-    if(queryBox) queryBox.style.display='block';
-    if(sub) sub.textContent='輸入 Email 查詢訂單 ✿';
+    // 未登入：提示登入（路線B：訂單需登入才能看）
+    if(queryBox) queryBox.style.display='none';
+    if(sub) sub.textContent='登入後即可查看您的訂單 ✿';
+    if(result) result.innerHTML=`<div style="text-align:center;padding:2.5rem 1rem;background:#fff;border-radius:16px;border:1px solid var(--border);">
+      <div style="font-size:2.5rem;margin-bottom:.8rem;">🔒</div>
+      <div style="color:var(--text);font-size:.95rem;margin-bottom:1.2rem;">請先登入會員，即可查看您的專屬訂單紀錄</div>
+      <button class="btn-primary" style="padding:.6rem 2rem;" onclick="show('member')">前往登入 →</button>
+    </div>`;
   }
 }
 
@@ -1670,6 +1673,10 @@ window.toggleMobileMenu=function(){
 };
 window.goToOrderForm=function(){
   if(!cart.length){alert('購物車是空的！');return;}
+  if(!currentUser||!currentUser.email){
+    if(confirm('結帳前需要先登入會員，是否前往登入？')) show('member');
+    return;
+  }
   show('orderform');
   setupAutofillBar();
 };
@@ -1678,6 +1685,12 @@ window.handleShipping=function(radio){
   document.getElementById('store-wrap').style.display=(radio.value==='711'||radio.value==='family')?'block':'none';
 };
 window.submitOrder=async function(){
+  // 路線B：必須登入才能下單（訂單要綁定身分）
+  if(!currentUser||!currentUser.email){
+    alert('請先登入會員才能完成訂購');
+    show('member');
+    return;
+  }
   const name=document.getElementById('o-name').value.trim();
   const phone=document.getElementById('o-phone').value.trim();
   const email=document.getElementById('o-email').value.trim();
@@ -1698,7 +1711,9 @@ window.submitOrder=async function(){
   const payVal=payment?payment.value:'atm';
 
   const orderData={
-    orderId, email:email.toLowerCase(), name, phone,
+    orderId,
+    userEmail: currentUser.email,
+    email:email.toLowerCase(), name, phone,
     shipping:shipVal, shippingLabel:shipLabel[shipVal],
     address:shipVal==='home'?document.getElementById('o-address').value.trim():'',
     store:(shipVal==='711'||shipVal==='family')?document.getElementById('o-store').value.trim():'',
@@ -1709,7 +1724,7 @@ window.submitOrder=async function(){
     status:'待確認', payStatus:'未付款',
     createdAt:serverTimestamp(),
   };
-  try{ await addDoc(collection(db,'orders'),orderData); }catch(e){ console.error(e); }
+  try{ await addDoc(collection(db,'orders'),orderData); }catch(e){ console.error(e); alert('訂單儲存失敗，請稍後再試'); return; }
 
   document.getElementById('order-id-display').textContent='訂單編號：'+orderId;
   document.getElementById('order-items-display').innerHTML=cart.map(item=>`
@@ -1743,15 +1758,19 @@ const PAY_COLOR={'未付款':'#c62828','已付款':'#2e7d32'};
 let _cachedOrders=[];
 
 window.queryOrders=async function(){
-  const email=document.getElementById('query-email').value.trim().toLowerCase();
-  if(!email){alert('請輸入 Email');return;}
+  // 路線B：只查登入會員本人的訂單
+  if(!currentUser||!currentUser.email){
+    document.getElementById('orders-result').innerHTML='<div style="text-align:center;padding:2rem;color:var(--text2);">請先登入會員查看訂單</div>';
+    return;
+  }
+  const email=currentUser.email;
   const result=document.getElementById('orders-result');
   result.innerHTML='<div style="text-align:center;padding:2rem;color:var(--text2);">查詢中…</div>';
   try{
     const {getDocs}=await import("https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js");
-    const q=query(collection(db,'orders'),where('email','==',email),orderBy('createdAt','desc'));
+    const q=query(collection(db,'orders'),where('userEmail','==',email),orderBy('createdAt','desc'));
     const snap=await getDocs(q);
-    if(snap.empty){result.innerHTML='<div style="text-align:center;padding:2rem;color:var(--text2);">找不到訂單，請確認 Email 是否正確</div>';return;}
+    if(snap.empty){result.innerHTML='<div style="text-align:center;padding:2.5rem 1rem;color:var(--text2);"><div style="font-size:2.5rem;margin-bottom:.5rem;">🌸</div>還沒有訂單紀錄<br><span style="font-size:.82rem;">快去逛逛挑選喜歡的娃衣吧！</span></div>';return;}
     _cachedOrders=snap.docs.map(d=>({_docId:d.id,...d.data()}));
     renderOrderCards(result);
   }catch(e){console.error(e);result.innerHTML='<div style="text-align:center;padding:2rem;color:#c62828;">查詢失敗，請稍後再試</div>';}
