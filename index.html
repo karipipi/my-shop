@@ -426,6 +426,17 @@ nav{background:#ffffff;border-bottom:1.5px solid var(--border);position:sticky;t
           <span>繼續逛逛</span>
         </button>
       </div>
+      <!-- 個人資料 -->
+      <div style="background:#fff;border-radius:16px;border:1px solid var(--border);padding:1.5rem;margin-top:1.2rem;">
+        <div style="font-size:.95rem;font-weight:500;color:var(--pink4);margin-bottom:.3rem;">📝 常用收件資料</div>
+        <p style="font-size:.78rem;color:var(--text2);margin-bottom:1.1rem;">填寫後，結帳時可一鍵帶入，不用每次重打 ✿</p>
+        <div class="form-group"><label>收件人姓名</label><input type="text" id="m-name" placeholder="真實姓名"></div>
+        <div class="form-group"><label>聯絡電話</label><input type="tel" id="m-phone" placeholder="0912-345-678"></div>
+        <div class="form-group"><label>宅配地址</label><input type="text" id="m-address" placeholder="縣市、鄉鎮、路街門牌"></div>
+        <div class="form-group"><label>常用超商門市</label><input type="text" id="m-store" placeholder="如：台北忠孝門市"></div>
+        <div class="form-group"><label>備註偏好（選填）</label><input type="text" id="m-note" placeholder="如：包裝偏好、特殊需求"></div>
+        <button class="btn-primary" style="width:100%;padding:.7rem;font-size:.92rem;" onclick="saveMemberProfile()">💾 儲存常用資料</button>
+      </div>
     </div>
   </div>
 </div>
@@ -583,6 +594,11 @@ nav{background:#ffffff;border-bottom:1.5px solid var(--border);position:sticky;t
   <div style="margin-top:1rem;max-width:600px;margin-left:auto;margin-right:auto;">
     <div class="section-title">填寫收件資料</div>
     <div class="section-sub">請填寫您的資料以完成訂購 ✿</div>
+    <!-- 會員帶入按鈕（登入且有存資料才顯示）-->
+    <div id="autofill-bar" style="display:none;background:var(--pink);border-radius:12px;padding:.8rem 1rem;margin-bottom:1rem;display:flex;align-items:center;justify-content:space-between;gap:.8rem;flex-wrap:wrap;">
+      <span style="font-size:.85rem;color:var(--pink4);">🐱 偵測到您的常用資料</span>
+      <button class="btn-primary" style="font-size:.82rem;padding:.4rem 1rem;white-space:nowrap;" onclick="fillFromMember()">一鍵帶入 →</button>
+    </div>
     <div style="background:#fff;border-radius:20px;border:1px solid var(--border);padding:1.8rem;">
       <!-- 收件人 -->
       <div style="font-size:.92rem;font-weight:500;color:var(--pink4);margin-bottom:1rem;padding-bottom:.5rem;border-bottom:1px solid var(--border);">📦 收件資訊</div>
@@ -1505,6 +1521,72 @@ function onMemberClick(){
   show('member');
 }
 
+// ── 會員常用資料：存 / 讀 / 帶入 ──
+let memberProfile=null;
+
+async function saveMemberProfile(){
+  if(!currentUser||!currentUser.email){ showToast('請先登入','⚠',true); return; }
+  const data={
+    name: document.getElementById('m-name').value.trim(),
+    phone: document.getElementById('m-phone').value.trim(),
+    address: document.getElementById('m-address').value.trim(),
+    store: document.getElementById('m-store').value.trim(),
+    note: document.getElementById('m-note').value.trim(),
+    email: currentUser.email,
+    updatedAt: Date.now(),
+  };
+  try{
+    const {doc,setDoc}=await import("https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js");
+    await setDoc(doc(db,'members',currentUser.email), data);
+    memberProfile=data;
+    showToast('常用資料已儲存 ✓','✓');
+  }catch(e){
+    console.error(e);
+    showToast('儲存失敗，請稍後再試','⚠',true);
+  }
+}
+
+async function loadMemberProfile(){
+  if(!currentUser||!currentUser.email){ memberProfile=null; return; }
+  try{
+    const {doc,getDoc}=await import("https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js");
+    const snap=await getDoc(doc(db,'members',currentUser.email));
+    if(snap.exists()){
+      memberProfile=snap.data();
+      // 回填會員中心表單
+      const set=(id,v)=>{const el=document.getElementById(id);if(el)el.value=v||'';};
+      set('m-name',memberProfile.name);
+      set('m-phone',memberProfile.phone);
+      set('m-address',memberProfile.address);
+      set('m-store',memberProfile.store);
+      set('m-note',memberProfile.note);
+    }else{
+      memberProfile=null;
+    }
+  }catch(e){ console.error(e); memberProfile=null; }
+}
+
+// 結帳：一鍵帶入會員資料
+function fillFromMember(){
+  if(!memberProfile){ showToast('尚無常用資料','⚠',true); return; }
+  const set=(id,v)=>{const el=document.getElementById(id);if(el&&v)el.value=v;};
+  set('o-name',memberProfile.name);
+  set('o-phone',memberProfile.phone);
+  set('o-email',memberProfile.email||(currentUser&&currentUser.email));
+  set('o-address',memberProfile.address);
+  set('o-store',memberProfile.store);
+  set('o-note',memberProfile.note);
+  showToast('已帶入您的常用資料 ✓','✓');
+}
+
+// 進結帳頁時，決定要不要顯示「帶入」按鈕
+function setupAutofillBar(){
+  const bar=document.getElementById('autofill-bar');
+  if(!bar) return;
+  const hasData=memberProfile&&(memberProfile.name||memberProfile.phone||memberProfile.address);
+  bar.style.display=hasData?'flex':'none';
+}
+
 onAuthStateChanged(auth, user=>{
   currentUser=user;
   const btn=document.getElementById('nav-member-btn');
@@ -1526,10 +1608,13 @@ onAuthStateChanged(auth, user=>{
     if(em) em.textContent=user.email||'';
     const qe=document.getElementById('query-email');
     if(qe&&user.email) qe.value=user.email;
+    // 載入會員常用資料
+    loadMemberProfile();
   }else{
     if(btn) btn.innerHTML='👤 <span class="nm-text">會員</span>';
     if(loginView) loginView.style.display='block';
     if(profileView) profileView.style.display='none';
+    memberProfile=null;
   }
   // 若正停在訂單頁，依登入狀態即時刷新
   const myordersPage=document.getElementById('myorders');
@@ -1560,6 +1645,8 @@ window.loginLine=loginLine;
 window.logoutMember=logoutMember;
 window.onMemberClick=onMemberClick;
 window.setupMyOrdersView=setupMyOrdersView;
+window.saveMemberProfile=saveMemberProfile;
+window.fillFromMember=fillFromMember;
 window.openOrderPanel=window.openOrderPanel;
 window.closeOrderPanel=window.closeOrderPanel;
 
@@ -1584,6 +1671,7 @@ window.toggleMobileMenu=function(){
 window.goToOrderForm=function(){
   if(!cart.length){alert('購物車是空的！');return;}
   show('orderform');
+  setupAutofillBar();
 };
 window.handleShipping=function(radio){
   document.getElementById('address-wrap').style.display=radio.value==='home'?'block':'none';
