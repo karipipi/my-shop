@@ -528,7 +528,7 @@ nav{background:#ffffff;border-bottom:1.5px solid var(--border);position:sticky;t
 <!-- HOME -->
 <div class="page active" id="home">
   <div class="section-title">人氣推薦</div>
-  <div class="section-sub">娃娃們最愛的精選單品 🌸</div>
+  <div class="section-sub">✿ 精選好物・滿 1200 元免運費 ✿</div>
   <div class="product-grid" id="home-grid"></div>
 </div>
 <!-- SHOP -->
@@ -1031,9 +1031,9 @@ function renderShop(){
     ?products.map(productCardHTML).join('')
     :'<div class="empty-state" style="grid-column:1/-1"><div class="e-icon">🌸</div>目前沒有商品，請到後台新增</div>';
   const featured=products.filter(p=>p.featured);
-  homeGrid.innerHTML=featured.length
-    ?featured.map(productCardHTML).join('')
-    :products.slice(0,4).map(productCardHTML).join('');
+  homeGrid.innerHTML=products.length
+    ?(featured.length?featured:products).map(productCardHTML).join('')
+    :'<div class="empty-state" style="grid-column:1/-1"><div class="e-icon">🌸</div>目前沒有商品，請到後台新增</div>';
   buildShopFilterBar();
   buildMegaMenu();
   buildCatShortcuts();
