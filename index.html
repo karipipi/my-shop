@@ -12,8 +12,9 @@
   --pink:#f9e8ee;--pink2:#f0c6d6;--pink3:#d4829b;--pink4:#b85c78;
   --cream:#fdf8f5;--text:#3a2a30;--text2:#7a5a65;--white:#ffffff;--border:#edd5df;
 }
-body{font-family:'Huninn','Zen Maru Gothic',sans-serif;background:var(--cream) url('sakuracat.png') center 85%/100% no-repeat;background-attachment:scroll;color:var(--text);min-height:100vh;}
-@media(min-width:769px){body{background-attachment:fixed;}}
+body{font-family:'Huninn','Zen Maru Gothic',sans-serif;background:var(--cream);color:var(--text);min-height:100vh;}
+/* 背景圖獨立固定層（GPU 合成，捲動不卡）*/
+.bg-image{position:fixed;inset:0;background:url('sakuracat.png') center 85%/cover no-repeat;z-index:-1;will-change:transform;}
 .banner{background:#b85c78;color:#ffffff;text-align:center;padding:.5rem;font-size:.8rem;letter-spacing:.06em;position:relative;z-index:200;}
 #promoText{display:inline-block;transition:opacity .4s ease;}
 #promoText.fade{opacity:0;}
@@ -362,6 +363,7 @@ nav{background:#ffffff;border-bottom:1.5px solid var(--border);position:sticky;t
 </style>
 </head>
 <body>
+<div class="bg-image"></div>
 <div class="bg-overlay"></div>
 
 <!-- ── 側滑分類選單 ── -->
