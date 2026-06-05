@@ -602,7 +602,7 @@ nav{background:#ffffff;border-bottom:1.5px solid var(--border);position:sticky;t
         <div class="summary-row"><span>優惠折抵</span><span>-NT$0</span></div>
         <div class="summary-total"><span>總計</span><span id="cart-total">NT$0</span></div>
         <button class="checkout-btn" onclick="goToOrderForm()">前往結帳 →</button>
-        <p style="font-size:.75rem;color:var(--text2);text-align:center;margin-top:.8rem;">支援：信用卡・ATM轉帳・貨到付款</p>
+        <p style="font-size:.75rem;color:var(--text2);text-align:center;margin-top:.8rem;">支援：ATM 轉帳・貨到付款</p>
       </div>
     </div>
   </div>
@@ -653,9 +653,6 @@ nav{background:#ffffff;border-bottom:1.5px solid var(--border);position:sticky;t
         </label>
         <label style="display:flex;align-items:center;gap:.7rem;background:var(--cream);border-radius:10px;padding:.8rem 1rem;cursor:pointer;">
           <input type="radio" name="payment" value="cod" style="accent-color:var(--pink4);"> 貨到付款
-        </label>
-        <label style="display:flex;align-items:center;gap:.7rem;background:#f5f5f5;border-radius:10px;padding:.8rem 1rem;cursor:not-allowed;opacity:.5;">
-          <input type="radio" name="payment" value="card" disabled style="accent-color:var(--pink4);"> 信用卡（即將開放）
         </label>
       </div>
 
@@ -1835,10 +1832,17 @@ window.queryOrders=async function(){
   result.innerHTML='<div style="text-align:center;padding:2rem;color:var(--text2);">查詢中…</div>';
   try{
     const {getDocs}=await import("https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js");
-    const q=query(collection(db,'orders'),where('userEmail','==',email),orderBy('createdAt','desc'));
+    // 只用 where 篩選（不加 orderBy，避免需要複合索引），排序在前端做
+    const q=query(collection(db,'orders'),where('userEmail','==',email));
     const snap=await getDocs(q);
     if(snap.empty){result.innerHTML='<div style="text-align:center;padding:2.5rem 1rem;color:var(--text2);"><div style="font-size:2.5rem;margin-bottom:.5rem;">🌸</div>還沒有訂單紀錄<br><span style="font-size:.82rem;">快去逛逛挑選喜歡的娃衣吧！</span></div>';return;}
     _cachedOrders=snap.docs.map(d=>({_docId:d.id,...d.data()}));
+    // 前端依時間新到舊排序
+    _cachedOrders.sort((a,b)=>{
+      const ta=a.createdAt&&a.createdAt.seconds?a.createdAt.seconds:0;
+      const tb=b.createdAt&&b.createdAt.seconds?b.createdAt.seconds:0;
+      return tb-ta;
+    });
     renderOrderCards(result);
   }catch(e){console.error(e);result.innerHTML='<div style="text-align:center;padding:2rem;color:#c62828;">查詢失敗，請稍後再試</div>';}
 };
